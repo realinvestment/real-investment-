@@ -2,368 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Roulette 1-12 with Real Balance</title>
+  <title>Withdraw History with Loss Tracking</title>
   <style>
-    body {
-      background: #222;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
+    body { font-family: Arial, sans-serif; background: #222; color: #eee; padding: 20px; }
     h1 { color: gold; }
-
-    .wheel {
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      margin: 20px auto;
-      border: 10px solid #fff;
-      background: conic-gradient(
-        red 0 30deg, black 30deg 60deg,
-        red 60deg 90deg, black 90deg 120deg,
-        red 120deg 150deg, black 150deg 180deg,
-        red 180deg 210deg, black 210deg 240deg,
-        red 240deg 270deg, black 270deg 300deg,
-        red 300deg 330deg, black 330deg 360deg
-      );
-      position: relative;
-      transition: transform 4s ease-out;
-    }
-
-    .number-label {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      font-weight: bold;
-      font-size: 14px;
-      color: white;
-      pointer-events: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .ball {
-      width: 20px;
-      height: 20px;
-      background: yellow;
-      border-radius: 50%;
-      position: absolute;
-      top: 140px;
-      left: 140px;
-      z-index: 10;
-      transition: transform 1s ease-out;
-    }
-
-    .balance, .result {
-      font-size: 18px;
-      margin: 10px 0;
-    }
-
-    select, input {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      border-radius: 8px;
-      border: none;
-    }
-
-    button {
-      padding: 10px 25px;
-      font-size: 18px;
-      margin-top: 15px;
-      border-radius: 8px;
-      border: none;
-      background: green;
-      color: white;
-      cursor: pointer;
-    }
-
-    .history {
-      background: #333;
-      margin-top: 25px;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .history h3 { color: lightgreen; }
-    .history-entry {
-      border-bottom: 1px solid #555;
-      padding: 5px 0;
-      font-size: 14px;
-    }
-
-    table.payout-table {
+    table {
       width: 90%;
       margin: 20px auto;
       border-collapse: collapse;
       color: white;
-      font-size: 16px;
     }
-    table.payout-table th, table.payout-table td {
-      border: 1px solid white;
+    th, td {
+      border: 1px solid #555;
       padding: 8px;
+      text-align: center;
     }
-    table.payout-table th {
-      background-color: #444;
+    th {
+      background: #444;
+    }
+    .loss {
+      color: #ff4444;
+      font-weight: bold;
+    }
+    .success {
+      color: #4caf50;
+      font-weight: bold;
+    }
+    .failed {
+      color: #f44336;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>🎯 Roulette 1–12</h1>
-
-  <div class="balance" id="balanceDisplay">Balance: 0 USDT | 0 TZS</div>
-
-  <select id="currencySelect" title="Select Currency">
-    <option value="tzs">Tsh</option>
-    <option value="usdt">USDT</option>
-  </select>
-
-  <input type="number" id="betAmount" placeholder="Enter amount" min="1" />
-
-  <select id="betNumber" title="Pick a number"></select>
-
-  <select id="betColor" title="Pick a color">
-    <option value="">Choose Color</option>
-    <option value="red">Red</option>
-    <option value="black">Black</option>
-  </select>
-
-  <div class="wheel" id="wheel">
-    <div class="ball" id="ball"></div>
-  </div>
-
-  <button id="spinBtn">SPIN</button>
-  <div class="result" id="result"></div>
-
-  <table class="payout-table">
+  <h1>📤 Withdraw History</h1>
+  <table>
     <thead>
-      <tr><th>Winning</th><th>Payout</th></tr>
+      <tr>
+        <th>Date</th>
+        <th>Amount Withdrawn (USDT)</th>
+        <th>Lost Amount (USDT)</th>
+        <th>Status</th>
+      </tr>
     </thead>
-    <tbody>
-      <tr><td>Correct Number and Color</td><td>×4</td></tr>
-      <tr><td>Correct Number only</td><td>×2</td></tr>
-      <tr><td>Correct Color only</td><td>×1.5</td></tr>
-      <tr><td>No Win</td><td>0</td></tr>
+    <tbody id="withdrawHistoryBody">
+      <tr><td colspan="4">Loading...</td></tr>
     </tbody>
   </table>
 
-  <div class="history" id="historySection">
-    <h3>Bet History (Last 7 Days)</h3>
-    <div id="historyList"><i>No bets yet</i></div>
-  </div>
-
-  <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-  <audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
-
-<script>
-  const TZS_RATE = 2600;
-  const colors = ["red", "black", "red", "black", "red", "black", "red", "black", "red", "black", "red", "black"];
-
-  const balanceDisplay = document.getElementById("balanceDisplay");
-  const currencySelect = document.getElementById("currencySelect");
-  const betAmount = document.getElementById("betAmount");
-  const betNumber = document.getElementById("betNumber");
-  const betColor = document.getElementById("betColor");
-  const result = document.getElementById("result");
-  const wheel = document.getElementById("wheel");
-  const ball = document.getElementById("ball");
-  const historyList = document.getElementById("historyList");
-  const spinBtn = document.getElementById("spinBtn");
-  const winSound = document.getElementById("winSound");
-  const loseSound = document.getElementById("loseSound");
-
-  // Init numbers in dropdown and labels on wheel
-  for (let i = 1; i <= 12; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    betNumber.appendChild(opt);
-
-    const label = document.createElement("div");
-    label.className = "number-label";
-    const deg = i * 30 - 15;
-    const rad = deg * Math.PI / 180;
-    const x = 150 + Math.cos(rad) * 120 - 15;
-    const y = 150 + Math.sin(rad) * 120 - 15;
-    label.style.left = `${x}px`;
-    label.style.top = `${y}px`;
-    label.textContent = i;
-    label.style.color = colors[i - 1];
-    wheel.appendChild(label);
-  }
-
-  // User management
-  function getUser() {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    if (!currentUser) return { deposit: 0, phone: "" };
-    const user = users.find(u => u.phone === currentUser.phone);
-    return user || { deposit: 0, phone: currentUser.phone };
-  }
-
-  function saveUser(user) {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const index = users.findIndex(u => u.phone === user.phone);
-    if (index !== -1) {
-      users[index] = user;
-    } else {
-      users.push(user);
-    }
-    localStorage.setItem("users", JSON.stringify(users));
-    localStorage.setItem("currentUser", JSON.stringify(user));
-  }
-
-  function updateBalanceDisplay() {
-    const user = getUser();
-    const balanceUSDT = user.deposit || 0;
-    const balanceTZS = balanceUSDT * TZS_RATE;
-    balanceDisplay.textContent = `Balance: ${balanceUSDT.toFixed(4)} USDT | ${balanceTZS.toLocaleString()} TZS`;
-  }
-
-  // Bet history management
-  function saveBetHistory(entry) {
-    let history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
-    const now = Date.now();
-    history = history.filter(item => now - new Date(item.timestamp).getTime() < 7 * 24 * 60 * 60 * 1000);
-    history.unshift(entry);
-    localStorage.setItem("rouletteBetHistory", JSON.stringify(history));
-  }
-
-  function renderBetHistory() {
-    const history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
-    if (history.length === 0) {
-      historyList.innerHTML = "<i>No recent bets</i>";
-      return;
-    }
-    historyList.innerHTML = history.map(h => {
-      const payoutTzs = (h.payout * (h.currency === "tzs" ? 1 : TZS_RATE));
-      return `
-        <div class="history-entry">
-          Bet: ${h.amount} ${h.currency.toUpperCase()} | Guess: ${h.guessNumber} - ${h.guessColor} | 
-          Result: ${h.resultNumber} - ${h.resultColor} | Winnings: ${payoutTzs > 0 ? payoutTzs.toFixed(2) : 0} TZS
-        </div>
-      `;
-    }).join("");
-  }
-
-  // Spin logic
-  spinBtn.addEventListener("click", () => {
-    const amount = parseFloat(betAmount.value);
-    const chosenNumber = parseInt(betNumber.value);
-    const chosenColor = betColor.value;
-    const user = getUser();
-    const currency = currencySelect.value;
-    const balanceUSDT = user.deposit || 0;
-
-    if (!amount || amount < 1 || !chosenNumber || !chosenColor) {
-      result.textContent = "⚠️ Please enter valid amount, number, and color.";
-      return;
+  <script>
+    // Simulate logged in user
+    function getUser() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      if (!currentUser) return null;
+      const user = users.find(u => u.phone === currentUser.phone);
+      return user || null;
     }
 
-    const bettingInTzs = currency === "tzs";
-    const betAmountUSDT = bettingInTzs ? amount / TZS_RATE : amount;
-
-    if (balanceUSDT < betAmountUSDT) {
-      result.textContent = "❌ Insufficient balance.";
-      return;
+    function saveWithdrawHistory(history) {
+      localStorage.setItem("withdrawHistory", JSON.stringify(history));
     }
 
-    // Deduct bet
-    user.deposit -= betAmountUSDT;
-    saveUser(user);
-    updateBalanceDisplay();
+    function getWithdrawHistory() {
+      const user = getUser();
+      if (!user) return [];
+      let history = JSON.parse(localStorage.getItem("withdrawHistory") || "[]");
+      // Filter history only for this user
+      return history.filter(h => h.phone === user.phone);
+    }
 
-    // Spin animation
-    const spinDegrees = 1440 + Math.floor(Math.random() * 360);
-    wheel.style.transition = "transform 4s ease-out";
-    wheel.style.transform = `rotate(${spinDegrees}deg)`;
-
-    const finalDegrees = spinDegrees % 360;
-    const sector = Math.floor(finalDegrees / 30);
-    const winningNumber = sector + 1;
-    const winningColor = colors[sector];
-
-    // Move ball
-    const angleRad = (sector * 30 + 15) * Math.PI / 180;
-    const x = Math.cos(angleRad) * 120;
-    const y = Math.sin(angleRad) * 120;
-
-    ball.style.transition = "none";
-    ball.style.transform = "translate(0,0)";
-    setTimeout(() => {
-      ball.style.transition = "transform 1s ease-out";
-      ball.style.transform = `translate(${x}px, ${y}px)`;
-    }, 4000);
-
-    // Result after animation
-    setTimeout(() => {
-      // 75% chance to lose forced to simulate house edge
-      const isLoss = Math.random() < 0.75;
-
-      let payout = 0;
-      let message = `🎯 Number: ${winningNumber}, Color: ${winningColor.toUpperCase()}. `;
-
-      if (isLoss) {
-        message += `❌ You lost ${bettingInTzs ? "Tsh " + amount : amount + " USDT"}`;
-        loseSound.play();
-      } else {
-        if (winningNumber === chosenNumber && winningColor === chosenColor) {
-          payout = betAmountUSDT * 4;
-          message += `🎉 Win ×4 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
-        } else if (winningNumber === chosenNumber) {
-          payout = betAmountUSDT * 2;
-          message += `✅ Correct Number! Win ×2 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
-        } else if (winningColor === chosenColor) {
-          payout = betAmountUSDT * 1.5;
-          message += `✅ Correct Color! Win ×1.5 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
-        } else {
-          message += "❌ You lost";
-        }
-
-        if (payout > 0) {
-          user.deposit += payout;
-          saveUser(user);
-          updateBalanceDisplay();
-          winSound.play();
-        } else {
-          loseSound.play();
-        }
+    function renderWithdrawHistory() {
+      const history = getWithdrawHistory();
+      const tbody = document.getElementById("withdrawHistoryBody");
+      if (history.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">Hakuna historia ya withdrawal.</td></tr>`;
+        return;
       }
+      tbody.innerHTML = history.map(h => {
+        let statusClass = h.status === "Success" ? "success" : (h.status === "Failed" ? "failed" : "");
+        return `
+          <tr>
+            <td>${new Date(h.date).toLocaleString()}</td>
+            <td>${h.amount.toFixed(4)}</td>
+            <td class="loss">${h.lostAmount.toFixed(4)}</td>
+            <td class="${statusClass}">${h.status}</td>
+          </tr>
+        `;
+      }).join("");
+    }
 
-      result.textContent = message;
-
-      // Save bet history
-      saveBetHistory({
-        amount,
-        currency,
-        guessNumber: chosenNumber,
-        guessColor: chosenColor,
-        resultNumber: winningNumber,
-        resultColor: winningColor,
-        payout,
-        timestamp: new Date().toISOString()
+    // Example function to add a withdraw entry (you would call this when user withdraws)
+    function addWithdrawEntry(amountWithdrawn, lostAmount, status = "Success") {
+      const user = getUser();
+      if (!user) return;
+      let history = JSON.parse(localStorage.getItem("withdrawHistory") || "[]");
+      history.push({
+        phone: user.phone,
+        date: new Date().toISOString(),
+        amount: amountWithdrawn,
+        lostAmount: lostAmount,
+        status: status
       });
+      saveWithdrawHistory(history);
+      renderWithdrawHistory();
+    }
 
-      renderBetHistory();
-    }, 5200);
-  });
-
-  // Initialize dummy user if none
-  if (!localStorage.getItem("currentUser")) {
-    const dummyUser = { phone: "+255123456789", deposit: 10 }; // 10 USDT start
-    localStorage.setItem("users", JSON.stringify([dummyUser]));
-    localStorage.setItem("currentUser", JSON.stringify(dummyUser));
-  }
-
-  updateBalanceDisplay();
-  renderBetHistory();
-</script>
+    // Init dummy data if empty (for demo)
+    if (!localStorage.getItem("withdrawHistory")) {
+      addWithdrawEntry(5, 2, "Success");
+      addWithdrawEntry(10, 0, "Failed");
+      addWithdrawEntry(3, 1.5, "Success");
+    } else {
+      renderWithdrawHistory();
+    }
+  </script>
 </body>
 </html>
