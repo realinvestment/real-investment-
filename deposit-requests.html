@@ -1,159 +1,140 @@
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Uthibitisho wa Malipo</title>
+  <title>Admin - USDT Deposits</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f5f5f5;
-      padding: 20px;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    h2 {
-      text-align: center;
-      color: #333;
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .filter-section {
-      margin-bottom: 15px;
-      text-align: center;
+    header h2 {
+      margin: 0;
+      font-size: 1.5rem;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      margin-top: 1rem;
     }
 
     th, td {
-      padding: 10px;
-      text-align: center;
-      border: 1px solid #ddd;
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      text-align: left;
     }
 
     th {
-      background-color: #007bff;
-      color: white;
+      background: rgba(0,0,0,0.2);
     }
 
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    tr:hover {
+      background: rgba(255,255,255,0.1);
     }
 
     button {
-      padding: 6px 12px;
+      padding: 0.4rem 0.8rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
+      font-size: 0.9rem;
       cursor: pointer;
       color: #fff;
     }
 
-    .approve-btn {
-      background-color: #28a745;
+    .approve {
+      background-color: #4caf50;
     }
 
-    .reject-btn {
-      background-color: #dc3545;
+    .reject {
+      background-color: #f44336;
+    }
+
+    .status {
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h2>Admin - USDT Deposit Requests</h2>
+    <button onclick="window.location.href='home.html'" style="background:#ffc107; color:#000; padding:0.5rem 1rem; border:none; border-radius:5px; cursor:pointer;">🏠 Home</button>
+  </header>
 
-  <h2>Uthibitisho wa Malipo</h2>
-
-  <div class="filter-section">
-    <label>Chuja kwa Njia ya Malipo:</label>
-    <select id="methodFilter" onchange="loadPaymentConfirmations()">
-      <option value="all">Zote</option>
-      <option value="M-Pesa">M-Pesa</option>
-      <option value="Tigo Pesa">Tigo Pesa</option>
-      <option value="Airtel Money">Airtel Money</option>
-      <option value="Halopesa">Halopesa</option>
-      <option value="USDT">USDT</option>
-    </select>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Jina</th>
-        <th>Simu</th>
-        <th>Kiasi</th>
-        <th>Namba ya Malipo</th>
-        <th>Uthibitisho</th>
-        <th>Njia</th>
-        <th>Muda</th>
-        <th>Status</th>
-        <th>Hatua</th>
-      </tr>
-    </thead>
-    <tbody id="confirmationsTable"></tbody>
-  </table>
+  <main style="flex:1; padding: 1rem 2rem;">
+    <table id="depositsTable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Phone</th>
+          <th>Network</th>
+          <th>Wallet</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
 
   <script>
-    function loadPaymentConfirmations() {
-      const methodFilter = document.getElementById("methodFilter").value;
-      let confirmations = JSON.parse(localStorage.getItem("paymentConfirmations")) || [];
+    function loadDeposits() {
+      const deposits = JSON.parse(localStorage.getItem("usdtDeposits")) || [];
+      const tableBody = document.querySelector("#depositsTable tbody");
+      tableBody.innerHTML = "";
 
-      if (methodFilter !== "all") {
-        confirmations = confirmations.filter(c => c.method === methodFilter);
-      }
-
-      const table = document.getElementById("confirmationsTable");
-      table.innerHTML = "";
-
-      confirmations.forEach((item, index) => {
-        const status = item.status || "Pending";
-        let statusColor = "#999";
-        if (status === "Approved") statusColor = "green";
-        else if (status === "Rejected") statusColor = "red";
-
+      deposits.forEach((d, index) => {
         const row = document.createElement("tr");
+
         row.innerHTML = `
-          <td>${item.name}</td>
-          <td>${item.phoneNumber}</td>
-          <td>Tsh ${Number(item.amount).toLocaleString()}</td>
-          <td>${item.paymentPhone}</td>
-          <td>${item.confirmationText}</td>
-          <td>${item.method}</td>
-          <td>${item.timestamp}</td>
-          <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+          <td>${d.name}</td>
+          <td>${d.phone}</td>
+          <td>${d.network}</td>
+          <td>${d.wallet}</td>
+          <td>${d.amount}</td>
+          <td class="status">${d.status}</td>
+          <td>${d.date}</td>
           <td>
-            ${status === "Pending" ? `
-              <button class="approve-btn" onclick="updateStatus(${index}, 'Approved')">Kubali</button>
-              <button class="reject-btn" onclick="updateStatus(${index}, 'Rejected')">Kataa</button>
-            ` : ''}
+            ${d.status === "Pending" ? `
+              <button class="approve" onclick="updateStatus(${index}, 'Approved')">Approve</button>
+              <button class="reject" onclick="updateStatus(${index}, 'Rejected')">Reject</button>
+            ` : d.status}
           </td>
         `;
-        table.appendChild(row);
+
+        tableBody.appendChild(row);
       });
     }
 
-    function updateStatus(index, newStatus) {
-      const confirmations = JSON.parse(localStorage.getItem("paymentConfirmations")) || [];
-      confirmations[index].status = newStatus;
-
-      if (newStatus === "Approved") {
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const phone = confirmations[index].phoneNumber;
-        const amount = parseFloat(confirmations[index].amount);
-
-        const userIndex = users.findIndex(u => u.phone === phone);
-        if (userIndex !== -1) {
-          users[userIndex].deposit = (parseFloat(users[userIndex].deposit) || 0) + amount;
-          localStorage.setItem("users", JSON.stringify(users));
-        }
-      }
-
-      localStorage.setItem("paymentConfirmations", JSON.stringify(confirmations));
-      loadPaymentConfirmations();
+    function updateStatus(index, status) {
+      const deposits = JSON.parse(localStorage.getItem("usdtDeposits")) || [];
+      deposits[index].status = status;
+      localStorage.setItem("usdtDeposits", JSON.stringify(deposits));
+      loadDeposits();
+      alert(`Deposit ${status}`);
     }
 
-    window.onload = loadPaymentConfirmations;
+    loadDeposits();
   </script>
-
 </body>
 </html>
