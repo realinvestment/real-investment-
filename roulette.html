@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Roulette 1-12 Game</title>
+  <title>Roulette 1-12 with Real Balance</title>
   <style>
-    /* ====== BASIC PAGE STYLING ====== */
     body {
       background: #222;
       color: #fff;
@@ -14,19 +13,12 @@
     }
     h1 { color: gold; }
 
-    /* Smooth transition for animations */
-    .wheel, .ball, .number-label, button, input, select {
-      transition: all 0.3s ease;
-    }
-
-    /* ====== ROULETTE WHEEL STYLING ====== */
     .wheel {
       width: 300px;
       height: 300px;
       border-radius: 50%;
       margin: 20px auto;
       border: 10px solid #fff;
-      /* 12 alternating red/black sectors (30° each) */
       background: conic-gradient(
         red 0 30deg, black 30deg 60deg,
         red 60deg 90deg, black 90deg 120deg,
@@ -36,9 +28,9 @@
         red 300deg 330deg, black 330deg 360deg
       );
       position: relative;
+      transition: transform 4s ease-out;
     }
 
-    /* Number labels inside the wheel */
     .number-label {
       position: absolute;
       width: 30px;
@@ -52,7 +44,6 @@
       align-items: center;
     }
 
-    /* Ball that lands on winning number */
     .ball {
       width: 20px;
       height: 20px;
@@ -62,15 +53,14 @@
       top: 140px;
       left: 140px;
       z-index: 10;
+      transition: transform 1s ease-out;
     }
 
-    /* Balance & result display */
     .balance, .result {
       font-size: 18px;
       margin: 10px 0;
     }
 
-    /* Inputs & selects */
     select, input {
       padding: 10px;
       font-size: 16px;
@@ -79,7 +69,6 @@
       border: none;
     }
 
-    /* Spin button */
     button {
       padding: 10px 25px;
       font-size: 18px;
@@ -91,7 +80,6 @@
       cursor: pointer;
     }
 
-    /* Bet history container */
     .history {
       background: #333;
       margin-top: 25px;
@@ -111,7 +99,6 @@
       font-size: 14px;
     }
 
-    /* Payout table styling */
     table.payout-table {
       width: 90%;
       margin: 20px auto;
@@ -131,38 +118,30 @@
 <body>
   <h1>🎯 Roulette 1–12</h1>
 
-  <!-- Balance display -->
-  <div class="balance" id="balanceDisplay">Balance: Tsh 0 | USDT 0</div>
+  <div class="balance" id="balanceDisplay">Balance: 0 USDT | 0 TZS</div>
 
-  <!-- Currency selector -->
-  <select id="currencySelect">
+  <select id="currencySelect" title="Select Currency">
     <option value="tzs">Tsh</option>
     <option value="usdt">USDT</option>
   </select>
 
-  <!-- Bet amount -->
   <input type="number" id="betAmount" placeholder="Enter amount" min="1" />
 
-  <!-- Number selection -->
-  <select id="betNumber"></select>
+  <select id="betNumber" title="Pick a number"></select>
 
-  <!-- Color selection -->
-  <select id="betColor">
+  <select id="betColor" title="Pick a color">
     <option value="">Choose Color</option>
     <option value="red">Red</option>
     <option value="black">Black</option>
   </select>
 
-  <!-- Roulette wheel -->
   <div class="wheel" id="wheel">
     <div class="ball" id="ball"></div>
   </div>
 
-  <!-- Spin button -->
-  <button onclick="spin()">SPIN</button>
+  <button id="spinBtn">SPIN</button>
   <div class="result" id="result"></div>
 
-  <!-- Payout Table -->
   <table class="payout-table">
     <thead>
       <tr><th>Winning</th><th>Payout</th></tr>
@@ -175,219 +154,216 @@
     </tbody>
   </table>
 
-  <!-- Bet history -->
   <div class="history" id="historySection">
     <h3>Bet History (Last 7 Days)</h3>
     <div id="historyList"><i>No bets yet</i></div>
   </div>
 
-  <!-- Sounds -->
   <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
   <audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
 
-  <script>
-    /* ====== DOM ELEMENTS ====== */
-    const balanceDisplay = document.getElementById("balanceDisplay");
-    const currencySelect = document.getElementById("currencySelect");
-    const betAmount = document.getElementById("betAmount");
-    const betNumber = document.getElementById("betNumber");
-    const betColor = document.getElementById("betColor");
-    const result = document.getElementById("result");
-    const wheel = document.getElementById("wheel");
-    const ball = document.getElementById("ball");
-    const historyList = document.getElementById("historyList");
-    const winSound = document.getElementById("winSound");
-    const loseSound = document.getElementById("loseSound");
+<script>
+  const TZS_RATE = 2600;
+  const colors = ["red", "black", "red", "black", "red", "black", "red", "black", "red", "black", "red", "black"];
 
-    /* ====== CONSTANTS ====== */
-    const conversionRate = 2600; // 1 USDT = 2600 Tsh
-    const colors = ["red", "black", "red", "black", "red", "black", "red", "black", "red", "black", "red", "black"];
+  const balanceDisplay = document.getElementById("balanceDisplay");
+  const currencySelect = document.getElementById("currencySelect");
+  const betAmount = document.getElementById("betAmount");
+  const betNumber = document.getElementById("betNumber");
+  const betColor = document.getElementById("betColor");
+  const result = document.getElementById("result");
+  const wheel = document.getElementById("wheel");
+  const ball = document.getElementById("ball");
+  const historyList = document.getElementById("historyList");
+  const spinBtn = document.getElementById("spinBtn");
+  const winSound = document.getElementById("winSound");
+  const loseSound = document.getElementById("loseSound");
 
-    /* ====== INITIAL WHEEL SETUP ====== */
-    for (let i = 1; i <= 12; i++) {
-      // Add option to betNumber dropdown
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = i;
-      betNumber.appendChild(opt);
+  // Init numbers in dropdown and labels on wheel
+  for (let i = 1; i <= 12; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    betNumber.appendChild(opt);
 
-      // Create number label for wheel
-      const label = document.createElement("div");
-      label.className = "number-label";
-      const deg = i * 30 - 15;
-      const rad = deg * Math.PI / 180;
-      const x = 150 + Math.cos(rad) * 120 - 15;
-      const y = 150 + Math.sin(rad) * 120 - 15;
-      label.style.left = `${x}px`;
-      label.style.top = `${y}px`;
-      label.textContent = i;
-      label.style.color = colors[i - 1];
-      wheel.appendChild(label);
+    const label = document.createElement("div");
+    label.className = "number-label";
+    const deg = i * 30 - 15;
+    const rad = deg * Math.PI / 180;
+    const x = 150 + Math.cos(rad) * 120 - 15;
+    const y = 150 + Math.sin(rad) * 120 - 15;
+    label.style.left = `${x}px`;
+    label.style.top = `${y}px`;
+    label.textContent = i;
+    label.style.color = colors[i - 1];
+    wheel.appendChild(label);
+  }
+
+  // User management
+  function getUser() {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    if (!currentUser) return { deposit: 0, phone: "" };
+    const user = users.find(u => u.phone === currentUser.phone);
+    return user || { deposit: 0, phone: currentUser.phone };
+  }
+
+  function saveUser(user) {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const index = users.findIndex(u => u.phone === user.phone);
+    if (index !== -1) {
+      users[index] = user;
+    } else {
+      users.push(user);
     }
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+  }
 
-    /* ====== BALANCE FUNCTIONS ====== */
-    function getUser() {
-      return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+  function updateBalanceDisplay() {
+    const user = getUser();
+    const balanceUSDT = user.deposit || 0;
+    const balanceTZS = balanceUSDT * TZS_RATE;
+    balanceDisplay.textContent = `Balance: ${balanceUSDT.toFixed(4)} USDT | ${balanceTZS.toLocaleString()} TZS`;
+  }
+
+  // Bet history management
+  function saveBetHistory(entry) {
+    let history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
+    const now = Date.now();
+    history = history.filter(item => now - new Date(item.timestamp).getTime() < 7 * 24 * 60 * 60 * 1000);
+    history.unshift(entry);
+    localStorage.setItem("rouletteBetHistory", JSON.stringify(history));
+  }
+
+  function renderBetHistory() {
+    const history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
+    if (history.length === 0) {
+      historyList.innerHTML = "<i>No recent bets</i>";
+      return;
     }
-
-    function saveUser(user) {
-      localStorage.setItem("currentUser", JSON.stringify(user));
-    }
-
-    function updateBalance() {
-      const user = getUser();
-      const usdt = user.deposit || 0;
-      const tzs = usdt * conversionRate;
-      balanceDisplay.textContent = `Balance: Tsh ${tzs.toLocaleString()} | USDT ${usdt.toFixed(2)}`;
-    }
-
-    /* ====== MAIN GAME FUNCTION ====== */
-    function spin() {
-      const amount = parseFloat(betAmount.value);
-      const chosenNumber = parseInt(betNumber.value);
-      const chosenColor = betColor.value;
-      const user = getUser();
-      const currency = currencySelect.value;
-      const balanceUSDT = user.deposit || 0;
-
-      // Validate bet
-      if (!amount || amount < 1 || !chosenNumber || !chosenColor) {
-        result.textContent = "⚠️ Please enter a valid amount, number, and color.";
-        return;
-      }
-
-      // Convert Tsh to USDT if needed
-      const bettingInTsh = currency === "tzs";
-      const betAmountUSDT = bettingInTsh ? amount / conversionRate : amount;
-
-      // Check balance
-      if (balanceUSDT < betAmountUSDT) {
-        result.textContent = "❌ Insufficient balance.";
-        return;
-      }
-
-      // Deduct bet from balance
-      user.deposit -= betAmountUSDT;
-      saveUser(user);
-      updateBalance();
-
-      // Spin wheel animation
-      const spinDegrees = 1440 + Math.floor(Math.random() * 360); // multiple spins + random
-      wheel.style.transition = "transform 4s ease-out";
-      wheel.style.transform = `rotate(${spinDegrees}deg)`;
-
-      const finalDegrees = spinDegrees % 360;
-      const sector = Math.floor(finalDegrees / 30); // each sector is 30°
-      const winningNumber = sector + 1;
-      const winningColor = colors[sector];
-
-      // Move ball to winning sector
-      const angleRad = (sector * 30 + 15) * Math.PI / 180;
-      const x = Math.cos(angleRad) * 120;
-      const y = Math.sin(angleRad) * 120;
-
-      ball.style.transition = "none";
-      ball.style.transform = "translate(0,0)";
-      setTimeout(() => {
-        ball.style.transition = "transform 1s ease-out";
-        ball.style.transform = `translate(${x}px, ${y}px)`;
-      }, 4000);
-
-      // Result calculation after animation
-      setTimeout(() => {
-        const isLoss = Math.random() < 0.75; // 75% chance to lose
-        let payout = 0;
-        let message = `🎯 Number: ${winningNumber}, Color: ${winningColor.toUpperCase()}. `;
-
-        if (isLoss) {
-          // Forced loss
-          result.textContent = message + `❌ You lost ${bettingInTsh ? "Tsh " + amount : amount + " USDT"}`;
-          loseSound.play();
-        } else {
-          // Win conditions
-          if (winningNumber === chosenNumber && winningColor === chosenColor) {
-            payout = betAmountUSDT * 4;
-            message += `🎉 Congratulations! Win ×4 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
-          } else if (winningNumber === chosenNumber) {
-            payout = betAmountUSDT * 2;
-            message += `✅ Correct Number! Win ×2 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
-          } else if (winningColor === chosenColor) {
-            payout = betAmountUSDT * 1.5;
-            message += `✅ Correct Color! Win ×1.5 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
-          } else {
-            message += `❌ You lost`;
-          }
-
-          // Add payout to balance
-          if (payout > 0) {
-            user.deposit += payout;
-            saveUser(user);
-            updateBalance();
-            winSound.play();
-          } else {
-            loseSound.play();
-          }
-
-          result.textContent = message;
-        }
-
-        // Save bet history
-        saveBetHistory({
-          amount,
-          currency,
-          guessNumber: chosenNumber,
-          guessColor: chosenColor,
-          resultNumber: winningNumber,
-          resultColor: winningColor,
-          payout,
-          timestamp: new Date().toISOString()
-        });
-
-        renderBetHistory();
-      }, 5200);
-    }
-
-    /* ====== BET HISTORY FUNCTIONS ====== */
-    function saveBetHistory(entry) {
-      let history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
-      const now = Date.now();
-
-      // Keep only last 7 days
-      history = history.filter(item => now - new Date(item.timestamp).getTime() < 7 * 24 * 60 * 60 * 1000);
-
-      // Add newest entry at the top
-      history.unshift(entry);
-
-      localStorage.setItem("rouletteBetHistory", JSON.stringify(history));
-    }
-
-    function renderBetHistory() {
-      const history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
-      if (history.length === 0) {
-        historyList.innerHTML = "<i>No recent bets</i>";
-        return;
-      }
-      historyList.innerHTML = history.map(h => `
+    historyList.innerHTML = history.map(h => {
+      const payoutTzs = (h.payout * (h.currency === "tzs" ? 1 : TZS_RATE));
+      return `
         <div class="history-entry">
           Bet: ${h.amount} ${h.currency.toUpperCase()} | Guess: ${h.guessNumber} - ${h.guessColor} | 
-          Result: ${h.resultNumber} - ${h.resultColor} | Winnings: ${h.payout > 0 ? (h.payout * (h.currency === 'tzs' ? conversionRate : 1)).toFixed(2) : 0} ${h.currency.toUpperCase()}
+          Result: ${h.resultNumber} - ${h.resultColor} | Winnings: ${payoutTzs > 0 ? payoutTzs.toFixed(2) : 0} TZS
         </div>
-      `).join("");
+      `;
+    }).join("");
+  }
+
+  // Spin logic
+  spinBtn.addEventListener("click", () => {
+    const amount = parseFloat(betAmount.value);
+    const chosenNumber = parseInt(betNumber.value);
+    const chosenColor = betColor.value;
+    const user = getUser();
+    const currency = currencySelect.value;
+    const balanceUSDT = user.deposit || 0;
+
+    if (!amount || amount < 1 || !chosenNumber || !chosenColor) {
+      result.textContent = "⚠️ Please enter valid amount, number, and color.";
+      return;
     }
 
-    /* ====== ON PAGE LOAD ====== */
-    window.onload = () => {
-      updateBalance();
-      renderBetHistory();
+    const bettingInTzs = currency === "tzs";
+    const betAmountUSDT = bettingInTzs ? amount / TZS_RATE : amount;
 
-      // Optional: Initialize balance if none exists
-      let user = getUser();
-      if (!user.deposit || user.deposit === 0) {
-        user.deposit = 10; // initialize with 10 USDT
-        saveUser(user);
-        updateBalance();
+    if (balanceUSDT < betAmountUSDT) {
+      result.textContent = "❌ Insufficient balance.";
+      return;
+    }
+
+    // Deduct bet
+    user.deposit -= betAmountUSDT;
+    saveUser(user);
+    updateBalanceDisplay();
+
+    // Spin animation
+    const spinDegrees = 1440 + Math.floor(Math.random() * 360);
+    wheel.style.transition = "transform 4s ease-out";
+    wheel.style.transform = `rotate(${spinDegrees}deg)`;
+
+    const finalDegrees = spinDegrees % 360;
+    const sector = Math.floor(finalDegrees / 30);
+    const winningNumber = sector + 1;
+    const winningColor = colors[sector];
+
+    // Move ball
+    const angleRad = (sector * 30 + 15) * Math.PI / 180;
+    const x = Math.cos(angleRad) * 120;
+    const y = Math.sin(angleRad) * 120;
+
+    ball.style.transition = "none";
+    ball.style.transform = "translate(0,0)";
+    setTimeout(() => {
+      ball.style.transition = "transform 1s ease-out";
+      ball.style.transform = `translate(${x}px, ${y}px)`;
+    }, 4000);
+
+    // Result after animation
+    setTimeout(() => {
+      // 75% chance to lose forced to simulate house edge
+      const isLoss = Math.random() < 0.75;
+
+      let payout = 0;
+      let message = `🎯 Number: ${winningNumber}, Color: ${winningColor.toUpperCase()}. `;
+
+      if (isLoss) {
+        message += `❌ You lost ${bettingInTzs ? "Tsh " + amount : amount + " USDT"}`;
+        loseSound.play();
+      } else {
+        if (winningNumber === chosenNumber && winningColor === chosenColor) {
+          payout = betAmountUSDT * 4;
+          message += `🎉 Win ×4 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
+        } else if (winningNumber === chosenNumber) {
+          payout = betAmountUSDT * 2;
+          message += `✅ Correct Number! Win ×2 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
+        } else if (winningColor === chosenColor) {
+          payout = betAmountUSDT * 1.5;
+          message += `✅ Correct Color! Win ×1.5 = ${bettingInTzs ? "Tsh " + (payout * TZS_RATE).toFixed(0) : payout.toFixed(4) + " USDT"}`;
+        } else {
+          message += "❌ You lost";
+        }
+
+        if (payout > 0) {
+          user.deposit += payout;
+          saveUser(user);
+          updateBalanceDisplay();
+          winSound.play();
+        } else {
+          loseSound.play();
+        }
       }
-    };
-  </script>
+
+      result.textContent = message;
+
+      // Save bet history
+      saveBetHistory({
+        amount,
+        currency,
+        guessNumber: chosenNumber,
+        guessColor: chosenColor,
+        resultNumber: winningNumber,
+        resultColor: winningColor,
+        payout,
+        timestamp: new Date().toISOString()
+      });
+
+      renderBetHistory();
+    }, 5200);
+  });
+
+  // Initialize dummy user if none
+  if (!localStorage.getItem("currentUser")) {
+    const dummyUser = { phone: "+255123456789", deposit: 10 }; // 10 USDT start
+    localStorage.setItem("users", JSON.stringify([dummyUser]));
+    localStorage.setItem("currentUser", JSON.stringify(dummyUser));
+  }
+
+  updateBalanceDisplay();
+  renderBetHistory();
+</script>
 </body>
 </html>
