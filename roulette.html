@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🎯 Roulette 1–12 Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roulette 1-12 Game</title>
   <style>
     /* ====== BASIC PAGE STYLING ====== */
     body {
@@ -12,13 +11,8 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
-    h1 { color: gold; margin-bottom: 10px; }
+    h1 { color: gold; }
 
     /* Smooth transition for animations */
     .wheel, .ball, .number-label, button, input, select {
@@ -42,7 +36,6 @@
         red 300deg 330deg, black 330deg 360deg
       );
       position: relative;
-      user-select: none;
     }
 
     /* Number labels inside the wheel */
@@ -69,14 +62,12 @@
       top: 140px;
       left: 140px;
       z-index: 10;
-      pointer-events: none;
     }
 
     /* Balance & result display */
     .balance, .result {
       font-size: 18px;
       margin: 10px 0;
-      user-select: none;
     }
 
     /* Inputs & selects */
@@ -86,8 +77,6 @@
       margin: 5px;
       border-radius: 8px;
       border: none;
-      outline: none;
-      user-select: none;
     }
 
     /* Spin button */
@@ -100,17 +89,6 @@
       background: green;
       color: white;
       cursor: pointer;
-      user-select: none;
-      box-shadow: 0 0 8px #0f0;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: #0a0;
-    }
-    button:disabled {
-      background: #444;
-      cursor: not-allowed;
-      box-shadow: none;
     }
 
     /* Bet history container */
@@ -120,13 +98,13 @@
       padding: 15px;
       border-radius: 10px;
       max-width: 600px;
-      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
       text-align: left;
       max-height: 200px;
       overflow-y: auto;
-      user-select: none;
     }
-    .history h3 { color: lightgreen; margin-top: 0; }
+    .history h3 { color: lightgreen; }
     .history-entry {
       border-bottom: 1px solid #555;
       padding: 5px 0;
@@ -136,17 +114,14 @@
     /* Payout table styling */
     table.payout-table {
       width: 90%;
-      max-width: 600px;
       margin: 20px auto;
       border-collapse: collapse;
       color: white;
       font-size: 16px;
-      user-select: none;
     }
     table.payout-table th, table.payout-table td {
       border: 1px solid white;
       padding: 8px;
-      text-align: left;
     }
     table.payout-table th {
       background-color: #444;
@@ -154,43 +129,41 @@
   </style>
 </head>
 <body>
-  <h1>🎯 Roulette 1–12 Game</h1>
+  <h1>🎯 Roulette 1–12</h1>
 
   <!-- Balance display -->
   <div class="balance" id="balanceDisplay">Balance: Tsh 0 | USDT 0</div>
 
   <!-- Currency selector -->
-  <select id="currencySelect" aria-label="Select currency">
+  <select id="currencySelect">
     <option value="tzs">Tsh</option>
     <option value="usdt">USDT</option>
   </select>
 
   <!-- Bet amount -->
-  <input type="number" id="betAmount" placeholder="Enter amount" min="1" aria-label="Bet amount" />
+  <input type="number" id="betAmount" placeholder="Enter amount" min="1" />
 
   <!-- Number selection -->
-  <select id="betNumber" aria-label="Select number"></select>
+  <select id="betNumber"></select>
 
   <!-- Color selection -->
-  <select id="betColor" aria-label="Select color">
+  <select id="betColor">
     <option value="">Choose Color</option>
     <option value="red">Red</option>
     <option value="black">Black</option>
   </select>
 
   <!-- Roulette wheel -->
-  <div class="wheel" id="wheel" aria-hidden="true">
+  <div class="wheel" id="wheel">
     <div class="ball" id="ball"></div>
   </div>
 
   <!-- Spin button -->
-  <button id="spinButton">SPIN</button>
-
-  <!-- Result display -->
+  <button onclick="spin()">SPIN</button>
   <div class="result" id="result"></div>
 
   <!-- Payout Table -->
-  <table class="payout-table" aria-label="Payout table">
+  <table class="payout-table">
     <thead>
       <tr><th>Winning</th><th>Payout</th></tr>
     </thead>
@@ -203,14 +176,14 @@
   </table>
 
   <!-- Bet history -->
-  <div class="history" id="historySection" aria-live="polite" aria-atomic="true">
+  <div class="history" id="historySection">
     <h3>Bet History (Last 7 Days)</h3>
     <div id="historyList"><i>No bets yet</i></div>
   </div>
 
   <!-- Sounds -->
-  <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
-  <audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3" preload="auto"></audio>
+  <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+  <audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
 
   <script>
     /* ====== DOM ELEMENTS ====== */
@@ -223,7 +196,6 @@
     const wheel = document.getElementById("wheel");
     const ball = document.getElementById("ball");
     const historyList = document.getElementById("historyList");
-    const spinButton = document.getElementById("spinButton");
     const winSound = document.getElementById("winSound");
     const loseSound = document.getElementById("loseSound");
 
@@ -232,38 +204,38 @@
     const colors = ["red", "black", "red", "black", "red", "black", "red", "black", "red", "black", "red", "black"];
 
     /* ====== INITIAL WHEEL SETUP ====== */
-    function setupWheelNumbers() {
-      for (let i = 1; i <= 12; i++) {
-        // Add option to betNumber dropdown
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = i;
-        betNumber.appendChild(opt);
+    for (let i = 1; i <= 12; i++) {
+      // Add option to betNumber dropdown
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      betNumber.appendChild(opt);
 
-        // Create number label for wheel
-        const label = document.createElement("div");
-        label.className = "number-label";
-        const deg = i * 30 - 15;
-        const rad = deg * Math.PI / 180;
-        const x = 150 + Math.cos(rad) * 120 - 15;
-        const y = 150 + Math.sin(rad) * 120 - 15;
-        label.style.left = `${x}px`;
-        label.style.top = `${y}px`;
-        label.textContent = i;
-        label.style.color = colors[i - 1];
-        wheel.appendChild(label);
-      }
+      // Create number label for wheel
+      const label = document.createElement("div");
+      label.className = "number-label";
+      const deg = i * 30 - 15;
+      const rad = deg * Math.PI / 180;
+      const x = 150 + Math.cos(rad) * 120 - 15;
+      const y = 150 + Math.sin(rad) * 120 - 15;
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+      label.textContent = i;
+      label.style.color = colors[i - 1];
+      wheel.appendChild(label);
     }
 
     /* ====== BALANCE FUNCTIONS ====== */
-    function getCurrentUser() {
+    function getUser() {
       return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
     }
-    function saveCurrentUser(user) {
+
+    function saveUser(user) {
       localStorage.setItem("currentUser", JSON.stringify(user));
     }
-    function updateBalanceDisplay() {
-      const user = getCurrentUser();
+
+    function updateBalance() {
+      const user = getUser();
       const usdt = user.deposit || 0;
       const tzs = usdt * conversionRate;
       balanceDisplay.textContent = `Balance: Tsh ${tzs.toLocaleString()} | USDT ${usdt.toFixed(2)}`;
@@ -274,7 +246,7 @@
       const amount = parseFloat(betAmount.value);
       const chosenNumber = parseInt(betNumber.value);
       const chosenColor = betColor.value;
-      const user = getCurrentUser();
+      const user = getUser();
       const currency = currencySelect.value;
       const balanceUSDT = user.deposit || 0;
 
@@ -296,12 +268,8 @@
 
       // Deduct bet from balance
       user.deposit -= betAmountUSDT;
-      saveCurrentUser(user);
-      updateBalanceDisplay();
-
-      // Disable button to prevent double spin
-      spinButton.disabled = true;
-      result.textContent = "Spinning... Good luck! 🎲";
+      saveUser(user);
+      updateBalance();
 
       // Spin wheel animation
       const spinDegrees = 1440 + Math.floor(Math.random() * 360); // multiple spins + random
@@ -327,8 +295,7 @@
 
       // Result calculation after animation
       setTimeout(() => {
-        const loseChance = 0.75; // 75% chance to lose
-        const isLoss = Math.random() < loseChance;
+        const isLoss = Math.random() < 0.75; // 75% chance to lose
         let payout = 0;
         let message = `🎯 Number: ${winningNumber}, Color: ${winningColor.toUpperCase()}. `;
 
@@ -354,8 +321,8 @@
           // Add payout to balance
           if (payout > 0) {
             user.deposit += payout;
-            saveCurrentUser(user);
-            updateBalanceDisplay();
+            saveUser(user);
+            updateBalance();
             winSound.play();
           } else {
             loseSound.play();
@@ -363,9 +330,6 @@
 
           result.textContent = message;
         }
-
-        // Enable spin button again
-        spinButton.disabled = false;
 
         // Save bet history
         saveBetHistory({
@@ -413,16 +377,17 @@
 
     /* ====== ON PAGE LOAD ====== */
     window.onload = () => {
-      // Initialize user deposit if none exists
-      if (!localStorage.getItem("currentUser")) {
-        saveCurrentUser({ deposit: 5 }); // start with 5 USDT
-      }
-      setupWheelNumbers();
-      updateBalanceDisplay();
+      updateBalance();
       renderBetHistory();
-    };
 
-    spinButton.addEventListener("click", spin);
+      // Optional: Initialize balance if none exists
+      let user = getUser();
+      if (!user.deposit || user.deposit === 0) {
+        user.deposit = 10; // initialize with 10 USDT
+        saveUser(user);
+        updateBalance();
+      }
+    };
   </script>
 </body>
 </html>
