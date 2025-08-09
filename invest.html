@@ -184,21 +184,25 @@
         return;
       }
 
-      user.deposit -= amount;
-      user.invested = (user.invested || 0) + amount;
-      user.plan = plan.name;
-
-      const now = new Date();
-      const expiresOn = new Date(now);
-      expiresOn.setDate(now.getDate() + plan.days);
-
+      // Check if user already has active investment in this plan
       user.investments = user.investments || [];
-      const alreadyActive = user.investments.find(p => p.name === plan.name && new Date(p.expiresOn) > new Date());
-      if (alreadyActive) {
+      const now = new Date();
+      const activeInvestment = user.investments.find(p => p.name === plan.name && new Date(p.expiresOn) > now);
+      if (activeInvestment) {
         alert(`You already have an active investment in ${plan.name}. Wait for it to expire.`);
         return;
       }
 
+      // Deduct deposit and update invested amount
+      user.deposit -= amount;
+      user.invested = (user.invested || 0) + amount;
+      user.plan = plan.name;
+
+      // Set investment period
+      const expiresOn = new Date(now);
+      expiresOn.setDate(now.getDate() + plan.days);
+
+      // Add new investment
       user.investments.push({
         name: plan.name,
         amount: amount,
@@ -208,17 +212,16 @@
         earned: 0
       });
 
-      // Referral logic
+      // Referral bonus (add to referralBonus only)
       if (user.referredBy) {
         const refIndex = users.findIndex(u => u.phone === user.referredBy);
         if (refIndex !== -1) {
           const bonus = amount * plan.referral / 100;
           users[refIndex].referralBonus = (users[refIndex].referralBonus || 0) + bonus;
-          users[refIndex].deposit += bonus;
         }
       }
 
-      // Binary bonus logic (same as before)
+      // Binary bonus logic
       let uplinePhone = user.referredBy;
       let side = user.position || "left";
       let carriedVolume = amount;
@@ -248,13 +251,15 @@
             upline.binaryBonusDaily[today] = 0;
           }
 
-          const bonus = matchVolume * 0.08;
+          const bonus = matchVolume * 0.08; // 8%
           const remainingCap = planCap - upline.binaryBonusDaily[today];
 
           if (remainingCap > 0) {
             const actualBonus = Math.min(remainingCap, bonus);
             upline.binaryBonus += actualBonus;
             upline.binaryBonusDaily[today] += actualBonus;
+
+            // Deduct matched volume from both sides
             upline.leftVolume -= matchVolume;
             upline.rightVolume -= matchVolume;
           }
@@ -264,11 +269,12 @@
         side = upline.position || "left";
       }
 
+      // Save updates
       users[userIndex] = user;
       localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('currentUser', JSON.stringify(user));
 
-      alert(`Investment successful! You activated ${plan.name} with ${amount.toFixed(2)} USDT`);
+      alert(`Investment successful! You activated ${plan.name} with $${amount.toFixed(2)} USDT`);
       window.location.href = "home.html";
     }
   </script>

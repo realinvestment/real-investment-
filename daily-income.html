@@ -139,6 +139,7 @@
       cursor: pointer;
       box-shadow: 0 3px 10px rgba(40, 167, 69, 0.4);
       transition: all 0.3s ease;
+      margin-top: 20px;
     }
 
     .redeem-btn:hover {
@@ -249,8 +250,8 @@
       const dailyRate = activePlan?.dailyRate || 0;
       const daily = ((invested * dailyRate) / 100);
 
-      document.getElementById("balance").innerText = `$${deposit} / ${convertToTZS(deposit)}`;
-      document.getElementById("invested").innerText = `$${invested} / ${convertToTZS(invested)}`;
+      document.getElementById("balance").innerText = `$${deposit.toFixed(2)} / ${convertToTZS(deposit)}`;
+      document.getElementById("invested").innerText = `$${invested.toFixed(2)} / ${convertToTZS(invested)}`;
       document.getElementById("referralBonus").innerText = `$${referral.toFixed(2)} / ${convertToTZS(referral)}`;
       document.getElementById("binaryBonus").innerText = `$${binary.toFixed(2)} / ${convertToTZS(binary)}`;
       document.getElementById("dailyEarnings").innerText = `$${daily.toFixed(2)} / ${convertToTZS(daily)}`;
@@ -294,12 +295,16 @@
         return;
       }
 
+      // Add bonuses to deposit
       user.deposit = (user.deposit || 0) + totalBonus;
+      // Reset bonuses
       user.referralBonus = 0;
       user.binaryBonus = 0;
 
       users[index] = user;
       localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("currentUser", JSON.stringify(user));
+
       alert(`$${totalBonus.toFixed(2)} successfully redeemed to balance.`);
       displayUserData();
     }
