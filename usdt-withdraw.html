@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>User Withdraw USDT</title>
+  <title>Withdraw via USDT</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #2196f3, #21cbf3);
       color: #fff;
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
@@ -20,9 +21,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
-    header h2 { font-size: 1.5rem; margin: 0; }
+    header h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
     .back-btn {
       color: #ffc107;
       font-size: 1.2rem;
@@ -33,9 +37,9 @@
       max-width: 500px;
       margin: 2rem auto;
       padding: 2rem;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
     label {
       display: block;
@@ -52,8 +56,8 @@
       margin-bottom: 0.5rem;
     }
     #balance {
-      font-weight: bold;
       font-size: 1rem;
+      font-weight: bold;
       color: #fffacd;
       margin-bottom: 1rem;
     }
@@ -66,14 +70,14 @@
       width: 100%;
       padding: 0.75rem;
       background-color: #4caf50;
-      color: white;
+      color: #fff;
       font-size: 1.1rem;
       font-weight: bold;
       border: none;
       border-radius: 25px;
       cursor: pointer;
       margin-top: 1.5rem;
-      box-shadow: 0 4px 10px rgba(76,175,80,0.5);
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
     }
     button:hover {
       background-color: #43a047;
@@ -87,7 +91,7 @@
     <div></div>
   </header>
   <main>
-    <div id="balance">Balance: loading...</div>
+    <div id="balance">Balance: Loading...</div>
 
     <label for="network">Select Network:</label>
     <select id="network" onchange="updateFee()">
@@ -112,6 +116,21 @@
       return network === "TRC20" ? 2 : 1;
     }
 
+    function getCurrentUserBalance() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      if (!currentUser) return 0;
+
+      const user = users.find(u => u.phone === currentUser.phone);
+      return user ? (user.deposit || 0) : 0;
+    }
+
+    function displayBalance() {
+      const balance = getCurrentUserBalance();
+      document.getElementById("balance").innerText = `Balance: ${balance.toFixed(2)} USDT`;
+      return balance;
+    }
+
     function updateFee() {
       const network = document.getElementById("network").value;
       const amount = parseFloat(document.getElementById("amount").value) || 0;
@@ -121,15 +140,8 @@
       document.getElementById("totalDisplay").innerText = `Total Deducted: ${total.toFixed(2)} USDT`;
     }
 
-    function displayBalance() {
-      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      const balanceElem = document.getElementById("balance");
-      const balance = currentUser?.deposit ?? 0;
-      balanceElem.innerText = `Balance: ${balance.toFixed(2)} USDT`;
-      return balance;
-    }
-
     function submitWithdraw() {
+      const users = JSON.parse(localStorage.getItem("users")) || [];
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
       if (!currentUser) return alert("User not logged in");
 
@@ -139,34 +151,27 @@
       const fee = getFee(network);
       const total = amount + fee;
 
-      if (!wallet) {
-        return alert("Please enter your wallet address.");
+      if (!wallet || amount < 10) {
+        return alert("Please fill all fields correctly. Minimum withdrawal is 10 USDT.");
       }
 
-      if (isNaN(amount) || amount < 10) {
-        return alert("Minimum withdrawal amount is 10 USDT.");
-      }
-
-      const balance = currentUser.deposit ?? 0;
-      if (balance < total) {
-        return alert("Insufficient balance for this withdrawal including fees.");
-      }
-
-      // Update user balance
-      currentUser.deposit = parseFloat(balance) - total;
-
-      // Update users list as well
-      const users = JSON.parse(localStorage.getItem("users")) || [];
+      // Find user from users array to get latest balance
       const userIndex = users.findIndex(u => u.phone === currentUser.phone);
-      if (userIndex !== -1) {
-        users[userIndex].deposit = currentUser.deposit;
-        localStorage.setItem("users", JSON.stringify(users));
+      if (userIndex === -1) return alert("User not found");
+
+      if ((users[userIndex].deposit || 0) < total) {
+        return alert("Insufficient balance for this withdrawal");
       }
 
-      // Save updated currentUser
+      // Deduct balance
+      users[userIndex].deposit -= total;
+
+      // Update localStorage users and currentUser (to keep in sync)
+      localStorage.setItem("users", JSON.stringify(users));
+      currentUser.deposit = users[userIndex].deposit;
       localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
-      // Save withdraw request (pending approval)
+      // Save withdrawal request
       const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
       withdrawals.push({
         user: currentUser.phone,
@@ -174,19 +179,19 @@
         network,
         fee,
         wallet,
-        status: "Pending",
-        date: new Date().toLocaleString()
+        date: new Date().toLocaleString(),
+        status: "Pending"
       });
       localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
 
-      alert(`Withdrawal request of ${amount.toFixed(2)} USDT submitted!`);
+      alert(`Withdrawal of ${amount.toFixed(2)} USDT via ${network} submitted!`);
       window.location.href = "home.html";
     }
 
-    window.onload = () => {
+    document.addEventListener("DOMContentLoaded", () => {
       displayBalance();
       updateFee();
-    };
+    });
   </script>
 </body>
 </html>
