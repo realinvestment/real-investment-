@@ -108,14 +108,10 @@
     <div id="feeDisplay">Fee: -</div>
     <div id="totalDisplay">Total Deducted: -</div>
 
-    <!-- PIN input removed -->
-
     <button onclick="submitWithdraw()">Withdraw</button>
   </main>
 
   <script>
-    const rate = 2600;
-
     function getFee(network) {
       return network === "TRC20" ? 2 : 1;
     }
@@ -127,6 +123,14 @@
       const total = amount + fee;
       document.getElementById("feeDisplay").innerText = `Fee: ${fee.toFixed(2)} USDT`;
       document.getElementById("totalDisplay").innerText = `Total Deducted: ${total.toFixed(2)} USDT`;
+    }
+
+    function displayBalance() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const balanceElem = document.getElementById("balance");
+      const balance = currentUser?.deposit ?? 0;
+      balanceElem.innerText = `Balance: ${balance.toFixed(2)} USDT`;
+      return balance;
     }
 
     function submitWithdraw() {
@@ -143,13 +147,13 @@
         return alert("Please fill all fields correctly. Minimum withdrawal is 10 USDT.");
       }
 
-      // PIN validation removed
+      const balance = displayBalance();
 
-      if ((currentUser.deposit || 0) < total) {
+      if (balance < total) {
         return alert("Insufficient balance for this withdrawal");
       }
 
-      currentUser.deposit -= total;
+      currentUser.deposit = parseFloat(currentUser.deposit) - total;
 
       const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
       withdrawals.push({
@@ -166,12 +170,19 @@
       localStorage.setItem("currentUser", JSON.stringify(currentUser));
 
       alert(`Withdrawal of ${amount.toFixed(2)} USDT via ${network} submitted!`);
+
+      // Update balance display after withdrawal
+      displayBalance();
+
+      // Optionally redirect
       window.location.href = "home.html";
     }
 
-    // Display current balance
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    document.getElementById("balance").innerText = `Balance: ${user?.deposit?.toFixed(2) || "0.00"} USDT`;
+    // Initialize balance and fee display on page load
+    window.onload = () => {
+      displayBalance();
+      updateFee();
+    };
   </script>
 </body>
 </html>
