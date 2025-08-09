@@ -2,126 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Deposit History - Real Investment</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Deposit History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #2196f3, #21cbf3);
       color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: rgba(0, 0, 0, 0.2);
-      padding: 1rem 2rem;
+      margin: 0; padding: 0;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
-
-    header h2 {
-      font-size: 1.5rem;
+    header {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      padding: 1rem 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    h2 {
       margin: 0;
     }
-
-    .back-btn {
-      color: #ffc107;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
     main {
-      max-width: 800px;
-      margin: 2rem auto;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 1.5rem;
+      flex-grow: 1;
+      max-width: 600px;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(255,255,255,0.1);
+      margin: 2rem 0;
       border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      overflow-x: auto;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      background: rgba(255, 255, 255, 0.05);
     }
-
     th, td {
-      padding: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
       text-align: left;
-      font-size: 0.95rem;
     }
-
     th {
-      color: #ffe082;
+      background: rgba(0,0,0,0.2);
+    }
+    tr:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .status {
       font-weight: bold;
-      background: rgba(0, 0, 0, 0.15);
     }
-
-    td {
-      color: #ffffff;
-    }
-
-    .no-data {
+    .back-btn {
+      cursor: pointer;
+      color: #ffc107;
+      margin-top: 1rem;
+      font-size: 1rem;
       text-align: center;
-      padding: 2rem;
-      color: #fff9c4;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
   <header>
-    <span class="back-btn" onclick="window.location.href='home.html'">&larr; Back</span>
-    <h2>Deposit History</h2>
-    <div></div>
+    <h2>Your Deposit History</h2>
   </header>
-
   <main>
-    <table id="depositTable">
+    <table id="depositHistoryTable">
       <thead>
         <tr>
-          <th>Amount</th>
-          <th>Currency</th>
-          <th>Method</th>
-          <th>Date</th>
+          <th>Network</th>
+          <th>Wallet</th>
+          <th>Amount (USDT)</th>
           <th>Status</th>
+          <th>Date</th>
         </tr>
       </thead>
-      <tbody id="depositBody">
-        <!-- Deposits will appear here -->
-      </tbody>
+      <tbody></tbody>
     </table>
-    <div id="noData" class="no-data" style="display: none;">No deposit records found.</div>
+
+    <div class="back-btn" onclick="window.location.href='home.html'">← Back to Home</div>
   </main>
 
   <script>
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const deposits = JSON.parse(localStorage.getItem("depositHistory")) || [];
+    function loadDepositHistory() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (!currentUser) {
+        alert("You are not logged in.");
+        window.location.href = "login.html";
+        return;
+      }
 
-    const userDeposits = deposits.filter(d => d.phone === currentUser?.phone);
-    const tableBody = document.getElementById("depositBody");
-    const noData = document.getElementById("noData");
+      const deposits = JSON.parse(localStorage.getItem("usdtDeposits")) || [];
+      const tableBody = document.querySelector("#depositHistoryTable tbody");
+      tableBody.innerHTML = "";
 
-    if (userDeposits.length === 0) {
-      noData.style.display = "block";
-    } else {
-      userDeposits.reverse().forEach(dep => {
+      const userDeposits = deposits.filter(d => d.phone === currentUser.phone);
+
+      if(userDeposits.length === 0){
+        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No deposit records found.</td></tr>';
+        return;
+      }
+
+      userDeposits.forEach(d => {
         const row = document.createElement("tr");
-
         row.innerHTML = `
-          <td>${parseFloat(dep.amount).toFixed(2)}</td>
-          <td>${dep.currency}</td>
-          <td>${dep.method}</td>
-          <td>${dep.date}</td>
-          <td>${dep.status}</td>
+          <td>${d.network}</td>
+          <td>${d.wallet}</td>
+          <td>${parseFloat(d.amount).toFixed(2)}</td>
+          <td class="status">${d.status}</td>
+          <td>${d.date}</td>
         `;
-
         tableBody.appendChild(row);
       });
     }
+
+    loadDepositHistory();
   </script>
 </body>
 </html>

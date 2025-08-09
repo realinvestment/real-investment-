@@ -2,123 +2,131 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Withdraw History</title>
+  <title>Your Withdraw History</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f9ff;
-      margin: 0;
-      padding: 20px;
-      color: #333;
+      background: linear-gradient(135deg, #2196f3, #21cbf3);
+      color: #fff;
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      padding: 1rem 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
     }
     h2 {
-      text-align: center;
-      color: #007bff;
-      margin-bottom: 25px;
+      margin: 0;
     }
-    .history-table {
+    main {
+      flex-grow: 1;
+      max-width: 700px;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(255,255,255,0.1);
+      margin: 2rem 0;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      overflow-x: auto;
+    }
+    table {
       width: 100%;
       border-collapse: collapse;
-      max-width: 1000px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      border-radius: 8px;
-      overflow: hidden;
     }
-    .history-table th, .history-table td {
-      padding: 12px 15px;
-      text-align: center;
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      text-align: left;
     }
-    .history-table thead {
-      background-color: #007bff;
-      color: #ffffff;
+    th {
+      background: rgba(0,0,0,0.2);
     }
-    .history-table tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
+    tr:hover {
+      background: rgba(255,255,255,0.1);
     }
-    .no-data {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 18px;
-      color: #777;
+    .status {
+      font-weight: bold;
     }
     .back-btn {
-      display: block;
+      cursor: pointer;
+      color: #ffc107;
+      margin-top: 1rem;
+      font-size: 1rem;
       text-align: center;
-      margin-bottom: 20px;
-      font-size: 16px;
-      color: #007bff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .back-btn:hover {
-      text-decoration: underline;
-    }
-    .status-pending {
-      color: orange;
-      font-weight: bold;
-    }
-    .status-completed {
-      color: green;
-      font-weight: bold;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h2>Your Withdraw History</h2>
+  </header>
+  <main>
+    <table id="withdrawHistoryTable">
+      <thead>
+        <tr>
+          <th>Network</th>
+          <th>Wallet</th>
+          <th>Amount (USDT)</th>
+          <th>Fee (USDT)</th>
+          <th>Total Deducted (USDT)</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-  <a href="home.html" class="back-btn">← Back to Dashboard</a>
-
-  <h2>Withdraw History</h2>
-
-  <table class="history-table" id="withdrawTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Amount (USDT)</th>
-        <th>Network</th>
-        <th>Wallet</th>
-        <th>Fee</th>
-        <th>Total Deducted</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="withdrawBody">
-    </tbody>
-  </table>
-
-  <div class="no-data" id="noData" style="display: none;">No withdraw history found.</div>
+    <div class="back-btn" onclick="window.location.href='home.html'">← Back to Home</div>
+  </main>
 
   <script>
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const allWithdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
-    const tableBody = document.getElementById("withdrawBody");
-    const noData = document.getElementById("noData");
+    function loadWithdrawHistory() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (!currentUser) {
+        alert("You are not logged in.");
+        window.location.href = "login.html";
+        return;
+      }
 
-    const userWithdrawals = allWithdrawals
-      .filter(w => w.user === currentUser?.phone)
-      .sort((a, b) => new Date(b.date) - new Date(a.date)); // latest first
+      const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+      const tableBody = document.querySelector("#withdrawHistoryTable tbody");
+      tableBody.innerHTML = "";
 
-    if (userWithdrawals.length === 0) {
-      noData.style.display = "block";
-    } else {
+      const userWithdrawals = withdrawals.filter(w => w.user === currentUser.phone);
+
+      if(userWithdrawals.length === 0){
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No withdrawal records found.</td></tr>';
+        return;
+      }
+
       userWithdrawals.forEach(w => {
+        const amount = parseFloat(w.amount).toFixed(2);
+        const fee = parseFloat(w.fee).toFixed(2);
+        const total = (parseFloat(w.amount) + parseFloat(w.fee)).toFixed(2);
+
         const row = document.createElement("tr");
-        const statusClass = w.status === "Completed" ? "status-completed" : "status-pending";
         row.innerHTML = `
-          <td>${w.date}</td>
-          <td>${w.amount.toFixed(2)}</td>
           <td>${w.network}</td>
           <td>${w.wallet}</td>
-          <td>${w.fee.toFixed(2)}</td>
-          <td>${(w.amount + w.fee).toFixed(2)}</td>
-          <td class="${statusClass}">${w.status || 'Pending'}</td>
+          <td>${amount}</td>
+          <td>${fee}</td>
+          <td>${total}</td>
+          <td class="status">${w.status || "Pending"}</td>
+          <td>${w.date}</td>
         `;
         tableBody.appendChild(row);
       });
     }
-  </script>
 
+    loadWithdrawHistory();
+  </script>
 </body>
 </html>
