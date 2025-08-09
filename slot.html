@@ -117,11 +117,24 @@
   const symbols = ['🍒', '🍋', '🍊', '🍇', '🍉', '⭐', '💎'];
   const usdToTzsRate = 2600;
 
+  // Get current logged-in user info from users array + currentUser
   function getUser() {
-    return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    if (!currentUser) return { deposit: 0, phone: "" };
+    const user = users.find(u => u.phone === currentUser.phone);
+    return user || { deposit: 0, phone: currentUser.phone };
   }
 
   function saveUser(user) {
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const index = users.findIndex(u => u.phone === user.phone);
+    if (index !== -1) {
+      users[index] = user;
+    } else {
+      users.push(user);
+    }
+    localStorage.setItem("users", JSON.stringify(users));
     localStorage.setItem("currentUser", JSON.stringify(user));
   }
 
@@ -156,7 +169,7 @@
     const currency = document.getElementById("currency").value;
     const amount = parseFloat(document.getElementById("betAmount").value);
     const result = document.getElementById("resultText");
-    const user = getUser();
+    let user = getUser();
     let balance = user.deposit || 0;
 
     if (!amount || amount <= 0) {
@@ -237,8 +250,16 @@
     `).join('');
   }
 
+  // Initialize dummy user if none exists
+  if (!localStorage.getItem("currentUser")) {
+    const dummyUser = { phone: "+255123456789", deposit: 5 };
+    localStorage.setItem("users", JSON.stringify([dummyUser]));
+    localStorage.setItem("currentUser", JSON.stringify(dummyUser));
+  }
+
   updateBalance();
   renderHistory();
+
 </script>
 </body>
 </html>

@@ -170,12 +170,26 @@
   // Default betting currency: USDT
   let betCurrency = 'USDT';
 
-  function getUser() {
-    return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+  function getCurrentUserFromUsers() {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    if (!currentUser) return null;
+    return users.find(u => u.phone === currentUser.phone) || null;
   }
 
   function saveUser(user) {
-    localStorage.setItem("currentUser", JSON.stringify(user));
+    // Update user in users array and save to localStorage
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const index = users.findIndex(u => u.phone === user.phone);
+    if (index !== -1) {
+      users[index] = user;
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+    // Also update currentUser if matches
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if(currentUser && currentUser.phone === user.phone) {
+      localStorage.setItem("currentUser", JSON.stringify(user));
+    }
   }
 
   function formatMoney(amount, currency = 'USDT') {
@@ -188,7 +202,11 @@
   }
 
   function updateBalanceDisplay() {
-    const user = getUser();
+    const user = getCurrentUserFromUsers();
+    if (!user) {
+      balanceDisplay.textContent = `Balance: USDT 0.00 | TZS 0.00`;
+      return;
+    }
     const depositUSDT = user.deposit || 0;
     const depositTZS = depositUSDT * TZS_RATE;
     balanceDisplay.textContent = `Balance: USDT ${depositUSDT.toFixed(2)} | TZS ${depositTZS.toLocaleString()}`;
@@ -252,7 +270,11 @@
       return;
     }
 
-    const user = getUser();
+    const user = getCurrentUserFromUsers();
+    if (!user) {
+      message.textContent = "❌ User not logged in";
+      return;
+    }
     const depositUSDT = user.deposit || 0;
     const depositTZS = depositUSDT * TZS_RATE;
 
