@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Aviator Casino Game (USDT & TZS) with Sound & Balance Update</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    /* Styles kama awali */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 32px;
+      color: #ffcc00;
+      text-shadow: 1px 1px 4px #000;
+    }
+    .game-area {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      height: 350px;
+      background: radial-gradient(circle, #1a1a1a, #000000);
+      border: 2px solid #ffcc00;
+      border-radius: 15px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .crash-label {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      color: #ffcc00;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 20px;
+      border-radius: 10px;
+      z-index: 2;
+      font-weight: 900;
+      user-select: none;
+      text-shadow: 1px 1px 3px #000;
+      transition: all 0.3s ease;
+    }
+    .plane {
+      position: absolute;
+      width: 60px;
+      height: 30px;
+      background: url('https://img.icons8.com/ios-filled/50/ffffff/airplane-take-off.png') no-repeat center/contain;
+      top: 80%;
+      left: 10%;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+      align-items: center;
+    }
+    input[type="number"], select {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 18px;
+      width: 140px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      user-select: none;
+    }
+    button:hover:not(:disabled) {
+      background: linear-gradient(to right, #ff4b2b, #ff416c);
+    }
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+    .info-box {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .multiplier {
+      font-size: 36px;
+      color: #00e676;
+      font-weight: 900;
+      text-shadow: 1px 1px 4px #000;
+    }
+    .countdown {
+      font-size: 20px;
+      color: #03a9f4;
+      font-weight: 700;
+      margin-top: 5px;
+      user-select: none;
+    }
+    .result {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 15px;
+      user-select: none;
+      min-height: 24px;
+    }
+    .balance-display {
+      font-weight: 700;
+      font-size: 20px;
+      margin-bottom: 5px;
+      color: #8bc34a;
+      user-select: none;
+    }
+    .sound-toggle {
+      margin-left: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      user-select: none;
+      background: #333;
+      padding: 6px 12px;
+      border-radius: 6px;
+      color: #eee;
+      border: none;
+      transition: background 0.3s ease;
+    }
+    .sound-toggle:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Aviator Casino Game ✨</h1>
+  <div class="balance-display" id="balanceDisplay">Balance: 0 USDT | 0 TZS</div>
+  <div class="game-area">
+    <div class="crash-label" id="crashLabel">🛫 Flying...</div>
+    <div class="plane" id="plane"></div>
+  </div>
+  <div class="info-box">
+    <div class="multiplier" id="multiplier">x1.00</div>
+    <div class="countdown" id="countdown">Next flight in: 5s</div>
+    <div class="result" id="result"></div>
+  </div>
+  <div class="controls">
+    <select id="currencySelect" title="Select Currency">
+      <option value="usdt">USDT</option>
+      <option value="tzs">TZS</option>
+    </select>
+    <input type="number" id="betAmount" placeholder="Bet Amount" min="1" />
+    <button id="placeBetBtn">Place Bet</button>
+    <button id="cashOutBtn" disabled>Cash Out</button>
+    <button id="soundToggle" class="sound-toggle" title="Toggle Sound">🔈 Sound On</button>
+  </div>
+
+  <script>
+    const TZS_RATE = 2600;
+
+    const plane = document.getElementById("plane");
+    const multiplierText = document.getElementById("multiplier");
+    const resultText = document.getElementById("result");
+    const countdownText = document.getElementById("countdown");
+    const crashLabel = document.getElementById("crashLabel");
+    const balanceDisplay = document.getElementById("balanceDisplay");
+    const betInput = document.getElementById("betAmount");
+    const placeBetBtn = document.getElementById("placeBetBtn");
+    const cashOutBtn = document.getElementById("cashOutBtn");
+    const currencySelect = document.getElementById("currencySelect");
+    const soundToggleBtn = document.getElementById("soundToggle");
+
+    let multiplier = 1.0;
+    let interval;
+    let gameStarted = false;
+    let hasBet = false;
+    let hasCashedOut = false;
+    let countdown = 5;
+    let crashPoint = 0;
+    let recentRounds = [];
+
+    let soundEnabled = true;
+
+    // Sound effects
+    const soundBet = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+    const soundCashOut = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    const soundLose = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+
+    function playSound(sound) {
+      if (soundEnabled) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      }
+    }
+
+    function getUser() {
+      return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+    }
+
+    function saveUser(user) {
+      localStorage.setItem("currentUser", JSON.stringify(user));
+    }
+
+    function getBalanceUSDT() {
+      const user = getUser();
+      return user.deposit || 0;
+    }
+
+    function updateBalanceDisplay() {
+      const balanceUSDT = getBalanceUSDT();
+      const balanceTZS = balanceUSDT * TZS_RATE;
+      balanceDisplay.textContent = `Balance: ${balanceUSDT.toFixed(4)} USDT | ${balanceTZS.toLocaleString(undefined, {maximumFractionDigits:0})} TZS`;
+    }
+
+    function formatMoney(amount, currency) {
+      if (currency === "usdt") {
+        return `${amount.toFixed(4)} USDT`;
+      } else {
+        return `Tsh ${Math.round(amount).toLocaleString()}`;
+      }
+    }
+
+    function generateCrashPoint() {
+      // Limit no crash > 1.0 more than 5 consecutive times
+      let noCrashCount = 0;
+      for (let i = recentRounds.length - 1; i >= 0; i--) {
+        if (recentRounds[i] === 1.0) break;
+        noCrashCount++;
+      }
+      if (noCrashCount >= 5) {
+        recentRounds.push(1.0);
+        if (recentRounds.length > 50) recentRounds.shift();
+        return 1.0;
+      }
+
+      let rnd = Math.random();
+      let crash;
+
+      if (rnd < 0.3) {
+        crash = 1.0 + Math.random() * 0.19;  // Mostly below 1.2
+      } else if (rnd < 0.9) {
+        crash = 1.2 + Math.random() * 0.79;  // Mostly below 2.0
+      } else {
+        crash = 2.0 + Math.random() * 8.0;   // Rare big crash
+      }
+      crash = Math.round(crash * 100) / 100;
+
+      recentRounds.push(crash);
+      if (recentRounds.length > 50) recentRounds.shift();
+
+      return crash;
+    }
+
+    function flashBackground(color, duration = 800) {
+      const original = document.body.style.background;
+      document.body.style.background = color;
+      setTimeout(() => {
+        document.body.style.background = original;
+      }, duration);
+    }
+
+    function resetGame() {
+      multiplier = 1.0;
+      gameStarted = false;
+      hasCashedOut = false;
+      hasBet = false;
+      plane.style.left = "10%";
+      plane.style.top = "80%";
+      multiplierText.textContent = "x1.00";
+      resultText.textContent = "";
+      cashOutBtn.disabled = true;
+      placeBetBtn.disabled = false;
+      crashLabel.textContent = "🛫 Flying...";
+      countdown = 5;
+      countdownText.textContent = `Next flight in: ${countdown}s`;
+      crashPoint = generateCrashPoint();
+      updateBalanceDisplay();
+      startCountdown();
+    }
+
+    function startCountdown() {
+      const timer = setInterval(() => {
+        countdown--;
+        countdownText.textContent = `Next flight in: ${countdown}s`;
+        if (countdown === 0) {
+          clearInterval(timer);
+          startFlight();
+        }
+      }, 1000);
+    }
+
+    function startFlight() {
+      gameStarted = true;
+      let left = 10;
+      let top = 80;
+      multiplier = 1.0;
+      multiplierText.textContent = `x${multiplier.toFixed(2)}`;
+      crashLabel.textContent = "🛫 Flying...";
+
+      interval = setInterval(() => {
+        multiplier += 0.03;
+        multiplierText.textContent = `x${multiplier.toFixed(2)}`;
+
+        left += 1.0;
+        top -= 0.2;
+        plane.style.left = left + "%";
+        plane.style.top = top + "%";
+
+        if (multiplier >= crashPoint) {
+          endFlight();
+        }
+      }, 120);
+    }
+
+    function endFlight() {
+      clearInterval(interval);
+      gameStarted = false;
+
+      if (hasBet && !hasCashedOut) {
+        resultText.textContent = "💥 You lost!";
+        crashLabel.textContent = "💥 Crashed!";
+        flashBackground("rgba(255, 0, 0, 0.6)", 1000);
+        playSound(soundLose);
+      }
+
+      setTimeout(resetGame, 3000);
+    }
+
+    placeBetBtn.addEventListener("click", () => {
+      const currency = currencySelect.value;
+      let amount = parseFloat(betInput.value);
+
+      if (!amount || amount <= 0) {
+        alert("Enter a valid bet amount");
+        return;
+      }
+
+      const balanceUSDT = getBalanceUSDT();
+      let betUSDT = amount;
+
+      if (currency === "tzs") {
+        betUSDT = amount / TZS_RATE;
+      }
+
+      if (betUSDT > balanceUSDT) {
+        alert(`Insufficient balance. Your balance is ${
+          currency === 'usdt' ?
+            `${balanceUSDT.toFixed(4)} USDT` :
+            `Tsh ${Math.round(balanceUSDT * TZS_RATE).toLocaleString()}`
+        }.`);
+        return;
+      }
+
+      hasBet = true;
+      placeBetBtn.disabled = true;
+      resultText.textContent = "🟢 Bet Placed";
+      cashOutBtn.disabled = false;
+      playSound(soundBet);
+
+      // Deduct bet from balance immediately
+      let user = getUser();
+      user.deposit = parseFloat((user.deposit - betUSDT).toFixed(8));
+      if(user.deposit < 0) user.deposit = 0;
+      saveUser(user);
+      updateBalanceDisplay();
+    });
+
+    cashOutBtn.addEventListener("click", () => {
+      if (hasBet && !hasCashedOut && gameStarted) {
+        const currency = currencySelect.value;
+        hasCashedOut = true;
+        let betAmount = parseFloat(betInput.value);
+        let betUSDT = betAmount;
+        if (currency === "tzs") betUSDT = betAmount / TZS_RATE;
+
+        const winningsUSDT = betUSDT * multiplier;
+
+        let user = getUser();
+        user.deposit = parseFloat((user.deposit + winningsUSDT).toFixed(8));
+        saveUser(user);
+
+        const winningsDisplay = formatMoney(
+          currency === 'usdt' ? winningsUSDT : winningsUSDT * TZS_RATE,
+          currency
+        );
+
+        resultText.textContent = `✅ You won: ${winningsDisplay} at x${multiplier.toFixed(2)}`;
+        crashLabel.textContent = "✅ Cashed Out!";
+        cashOutBtn.disabled = true;
+        clearInterval(interval);
+        updateBalanceDisplay();
+        playSound(soundCashOut);
+        setTimeout(resetGame, 3000);
+      }
+    });
+
+    currencySelect.addEventListener("change", () => {
+      updateBalanceDisplay();
+    });
+
+    betInput.addEventListener("input", () => {
+      updateBalanceDisplay();
+    });
+
+    soundToggleBtn.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      soundToggleBtn.textContent = soundEnabled ? "🔈 Sound On" : "🔇 Sound Off";
+    });
+
+    // Initialize user if none exists
+    if (!localStorage.getItem("currentUser")) {
+      saveUser({ deposit: 5 }); // Sample starting deposit (5 USDT) - adjust as needed
+    }
+
+    resetGame();
+  </script>
+</body>
+</html>

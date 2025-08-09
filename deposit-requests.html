@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Uthibitisho wa Malipo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .filter-section {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .approve-btn {
+      background-color: #28a745;
+    }
+
+    .reject-btn {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Uthibitisho wa Malipo</h2>
+
+  <div class="filter-section">
+    <label>Chuja kwa Njia ya Malipo:</label>
+    <select id="methodFilter" onchange="loadPaymentConfirmations()">
+      <option value="all">Zote</option>
+      <option value="M-Pesa">M-Pesa</option>
+      <option value="Tigo Pesa">Tigo Pesa</option>
+      <option value="Airtel Money">Airtel Money</option>
+      <option value="Halopesa">Halopesa</option>
+      <option value="USDT">USDT</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Jina</th>
+        <th>Simu</th>
+        <th>Kiasi</th>
+        <th>Namba ya Malipo</th>
+        <th>Uthibitisho</th>
+        <th>Njia</th>
+        <th>Muda</th>
+        <th>Status</th>
+        <th>Hatua</th>
+      </tr>
+    </thead>
+    <tbody id="confirmationsTable"></tbody>
+  </table>
+
+  <script>
+    function loadPaymentConfirmations() {
+      const methodFilter = document.getElementById("methodFilter").value;
+      let confirmations = JSON.parse(localStorage.getItem("paymentConfirmations")) || [];
+
+      if (methodFilter !== "all") {
+        confirmations = confirmations.filter(c => c.method === methodFilter);
+      }
+
+      const table = document.getElementById("confirmationsTable");
+      table.innerHTML = "";
+
+      confirmations.forEach((item, index) => {
+        const status = item.status || "Pending";
+        let statusColor = "#999";
+        if (status === "Approved") statusColor = "green";
+        else if (status === "Rejected") statusColor = "red";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.phoneNumber}</td>
+          <td>Tsh ${Number(item.amount).toLocaleString()}</td>
+          <td>${item.paymentPhone}</td>
+          <td>${item.confirmationText}</td>
+          <td>${item.method}</td>
+          <td>${item.timestamp}</td>
+          <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+          <td>
+            ${status === "Pending" ? `
+              <button class="approve-btn" onclick="updateStatus(${index}, 'Approved')">Kubali</button>
+              <button class="reject-btn" onclick="updateStatus(${index}, 'Rejected')">Kataa</button>
+            ` : ''}
+          </td>
+        `;
+        table.appendChild(row);
+      });
+    }
+
+    function updateStatus(index, newStatus) {
+      const confirmations = JSON.parse(localStorage.getItem("paymentConfirmations")) || [];
+      confirmations[index].status = newStatus;
+
+      if (newStatus === "Approved") {
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const phone = confirmations[index].phoneNumber;
+        const amount = parseFloat(confirmations[index].amount);
+
+        const userIndex = users.findIndex(u => u.phone === phone);
+        if (userIndex !== -1) {
+          users[userIndex].deposit = (parseFloat(users[userIndex].deposit) || 0) + amount;
+          localStorage.setItem("users", JSON.stringify(users));
+        }
+      }
+
+      localStorage.setItem("paymentConfirmations", JSON.stringify(confirmations));
+      loadPaymentConfirmations();
+    }
+
+    window.onload = loadPaymentConfirmations;
+  </script>
+
+</body>
+</html>

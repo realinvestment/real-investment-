@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Withdraw Approval - Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    th {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+    tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    button {
+      padding: 6px 12px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+    .completed {
+      color: lightgreen;
+      font-weight: bold;
+    }
+    .pending {
+      color: yellow;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Admin - Withdraw Approval</h2>
+    <span onclick="window.location.href='home.html'" style="cursor:pointer; color:#ffc107;">Back</span>
+  </header>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Phone</th>
+          <th>Amount</th>
+          <th>Network</th>
+          <th>Wallet</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="approvalTableBody"></tbody>
+    </table>
+  </main>
+
+  <script>
+    let withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    const tableBody = document.getElementById("approvalTableBody");
+    tableBody.innerHTML = "";
+
+    if (withdrawals.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ffc107;">No withdrawal requests.</td></tr>`;
+    } else {
+      withdrawals.forEach((w, index) => {
+        const user = users.find(u => u.phone === w.phone);
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${user ? user.name : 'Unknown'}</td>
+          <td>${w.phone}</td>
+          <td>${parseFloat(w.amount).toFixed(2)} USDT</td>
+          <td>${w.network}</td>
+          <td>${w.wallet}</td>
+          <td>${w.date}</td>
+          <td class="${w.status === 'Completed' ? 'completed' : 'pending'}">${w.status}</td>
+          <td>
+            <button onclick="approve(${index})" ${w.status === 'Completed' ? 'disabled' : ''}>Mark Completed</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function approve(index) {
+      withdrawals[index].status = "Completed";
+      localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+      alert("Status updated to Completed!");
+      location.reload();
+    }
+  </script>
+
+</body>
+</html>

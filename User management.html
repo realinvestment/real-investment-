@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Simamia Watumiaji</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .search-container {
+      text-align: right;
+      margin-bottom: 20px;
+    }
+    .search-container input {
+      width: 60%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 8px;
+      font-size: 1rem;
+    }
+    .search-container button {
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button.add-user-btn {
+      width: 100%;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 30px;
+    }
+    .user-card {
+      background: white;
+      padding: 15px;
+      border-left: 5px solid #28a745;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .user-card span {
+      display: block;
+      font-size: 0.95em;
+    }
+    .danger {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Simamia Watumiaji</h2>
+
+    <div class="search-container">
+      <input type="text" id="searchPhone" placeholder="Tafuta namba ya mtumiaji..." />
+      <button onclick="searchUser()">Tafuta</button>
+      <button onclick="clearSearch()" style="background-color: #6c757d; margin-left: 8px;">Ondoa Filter</button>
+    </div>
+
+    <div class="form-group">
+      <input type="text" id="name" placeholder="Jina la Mtumiaji" />
+    </div>
+    <div class="form-group">
+      <input type="text" id="phone" placeholder="Namba ya Simu" />
+    </div>
+    <div class="form-group">
+      <input type="password" id="password" placeholder="Nenosiri" />
+    </div>
+    <div class="form-group">
+      <input type="text" id="referredBy" placeholder="Aliyemualika (namba ya mtumaji)" />
+    </div>
+    <div class="form-group">
+      <input type="number" id="balance" placeholder="Salio la Mwanzo" />
+    </div>
+    <button class="add-user-btn" onclick="addUser()">Ongeza Mtumiaji</button>
+
+    <hr style="margin: 30px 0;">
+    <h3>Watumiaji Wote</h3>
+    <div id="userList"></div>
+  </div>
+
+  <script>
+    const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+    const deposits = JSON.parse(localStorage.getItem("paymentConfirmations")) || [];
+
+    function getTotalWithdraw(phone) {
+      return withdrawals
+        .filter(w => w.phone === phone && w.status === "approved")
+        .reduce((sum, w) => sum + Number(w.amount), 0);
+    }
+
+    function getTotalDeposit(phone) {
+      return deposits
+        .filter(d => d.phoneNumber === phone && d.status === "Approved")
+        .reduce((sum, d) => sum + Number(d.amount), 0);
+    }
+
+    function displayUsers(filteredUsers = null) {
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+
+      const usersToShow = filteredUsers || users;
+
+      if (usersToShow.length === 0) {
+        list.innerHTML = "<p>Hakuna watumiaji waliopo.</p>";
+        return;
+      }
+
+      usersToShow.forEach((user, index) => {
+        const totalWithdraw = getTotalWithdraw(user.phone);
+        const totalDeposit = getTotalDeposit(user.phone);
+
+        const card = document.createElement("div");
+        card.className = "user-card";
+
+        card.innerHTML = `
+          <strong>${user.name}</strong>
+          <span>📞 Namba: ${user.phone}</span>
+          <span>🔐 Nenosiri: ${user.password}</span>
+          <span>👤 Aliyemualika: ${user.referredBy || '-'}</span>
+          <span>👥 Walioalikwa: ${(user.referrals || []).join(", ") || '-'}</span>
+          <span>💰 Salio (deposit): ${user.deposit?.toLocaleString() || 0} Tsh</span>
+          <span>💵 Jumla ya Deposit: ${totalDeposit.toLocaleString()} Tsh</span>
+          <span>⬇️ Jumla ya Withdrawals: ${totalWithdraw.toLocaleString()} Tsh</span>
+          <button class="danger" onclick="deleteUserByPhone('${user.phone}')">Futa Mtumiaji</button>
+        `;
+
+        list.appendChild(card);
+      });
+    }
+
+    function addUser() {
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const referredBy = document.getElementById("referredBy").value.trim();
+      const balanceStr = document.getElementById("balance").value.trim();
+      const balance = parseFloat(balanceStr);
+
+      if (!name || !phone || !password || isNaN(balance)) {
+        alert("Tafadhali jaza taarifa zote vizuri.");
+        return;
+      }
+
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+
+      const exists = users.some(u => u.phone === phone);
+      if (exists) {
+        alert("Mtumiaji tayari yupo.");
+        return;
+      }
+
+      const newUser = {
+        name,
+        phone,
+        password,
+        deposit: balance,
+        referralCommission: 0,
+        referrals: [],
+        referredBy: referredBy || null,
+        withdrawals: []
+      };
+
+      // Weka kwenye referrer kama yupo
+      if (referredBy) {
+        const referrerIndex = users.findIndex(u => u.phone === referredBy);
+        if (referrerIndex !== -1) {
+          users[referrerIndex].referrals = users[referrerIndex].referrals || [];
+          if (!users[referrerIndex].referrals.includes(phone)) {
+            users[referrerIndex].referrals.push(phone);
+          }
+        }
+      }
+
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Mtumiaji ameongezwa.");
+      clearForm();
+      displayUsers();
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("password").value = "";
+      document.getElementById("referredBy").value = "";
+      document.getElementById("balance").value = "";
+    }
+
+    function deleteUserByPhone(phone) {
+      if (!confirm("Una uhakika unafuta mtumiaji huyu?")) return;
+
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      users = users.filter(u => u.phone !== phone);
+      localStorage.setItem("users", JSON.stringify(users));
+      displayUsers();
+    }
+
+    function searchUser() {
+      const searchVal = document.getElementById("searchPhone").value.trim();
+      if (!searchVal) {
+        displayUsers();
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const filtered = users.filter(u => u.phone.includes(searchVal));
+      displayUsers(filtered);
+    }
+
+    function clearSearch() {
+      document.getElementById("searchPhone").value = "";
+      displayUsers();
+    }
+
+    window.onload = () => {
+      displayUsers();
+    };
+  </script>
+</body>
+</html>

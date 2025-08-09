@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Previous Activations</title>
+
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    h3 {
+      margin-bottom: 20px;
+      color: #007bff;
+      font-size: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table thead {
+      background: #007bff;
+      color: white;
+    }
+    table th, table td {
+      padding: 10px;
+      text-align: left;
+    }
+    button.pdf-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button.pdf-btn:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h3>Previous Activations</h3>
+  <table id="activationTable" class="display">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>User ID</th>
+        <th>User</th>
+        <th>Package</th>
+        <th>Amount</th>
+        <th>Validity</th>
+        <th>Activated On</th>
+        <th>Expires On</th>
+        <th>Download PDF</th>
+      </tr>
+    </thead>
+    <tbody id="activationBody"></tbody>
+  </table>
+</div>
+
+<!-- JS Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(u => u.phone === currentUser?.phone);
+    if (!user || !user.investments || user.investments.length === 0) return;
+
+    const planDurations = {
+      "Plan A (Uplink)": 90,
+      "Plan B (Boost)": 100,
+      "Plan C (Launch)": 110,
+      "Plan D (Orbit)": 125,
+      "Plan E (Velocity)": 130,
+      "Plan F (Quantum)": 140,
+      "Plan G (Apex)": 150
+    };
+
+    const tbody = document.getElementById("activationBody");
+    user.investments.forEach((inv, index) => {
+      const start = new Date(inv.startDate);
+      let expiry;
+
+      if (inv.expiresOn) {
+        expiry = new Date(inv.expiresOn);
+      } else {
+        const days = planDurations[inv.name] || 90;
+        expiry = new Date(start);
+        expiry.setDate(expiry.getDate() + days);
+      }
+
+      const validity = Math.round((expiry - start) / (1000 * 60 * 60 * 24));
+
+      const row = `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${user.phone}</td>
+          <td>
+            <strong>${user.name || 'User'}</strong><br/>
+            <small>${user.email || 'no-email@example.com'}</small>
+          </td>
+          <td>${inv.name}</td>
+          <td>$${inv.amount}</td>
+          <td>${validity} Days</td>
+          <td>${start.toDateString()}</td>
+          <td>${expiry.toDateString()}</td>
+          <td><button class="pdf-btn" onclick="downloadPDF(${index})">PDF</button></td>
+        </tr>`;
+      tbody.innerHTML += row;
+    });
+
+    $('#activationTable').DataTable();
+  });
+
+  function downloadPDF(index) {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(u => u.phone === currentUser?.phone);
+    const inv = user?.investments?.[index];
+    if (!inv) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const start = new Date(inv.startDate);
+    const expiry = inv.expiresOn ? new Date(inv.expiresOn) : (() => {
+      const days = 125;
+      const temp = new Date(start);
+      temp.setDate(temp.getDate() + days);
+      return temp;
+    })();
+
+    doc.setFontSize(16);
+    doc.text("Investment Activation Receipt", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`User ID: ${user.phone}`, 20, 35);
+    doc.text(`Name: ${user.name || 'User'}`, 20, 42);
+    doc.text(`Email: ${user.email || 'no-email@example.com'}`, 20, 49);
+    doc.text(`Package: ${inv.name}`, 20, 63);
+    doc.text(`Amount: $${inv.amount}`, 20, 70);
+    doc.text(`Daily Rate: ${inv.dailyRate || 0}%`, 20, 77);
+    doc.text(`Activated On: ${start.toDateString()}`, 20, 84);
+    doc.text(`Expires On: ${expiry.toDateString()}`, 20, 91);
+
+    doc.save(`Activation_${inv.name.replace(/\s/g, "_")}.pdf`);
+  }
+</script>
+
+</body>
+</html>

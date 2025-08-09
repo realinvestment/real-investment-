@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Withdraw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 25px;
+    }
+    .method {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .method button {
+      padding: 20px 0;
+      border-radius: 15px;
+      color: white;
+      border: none;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      width: 100%;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    .method button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    .mobile {
+      background: linear-gradient(45deg, #28a745, #4caf50);
+      box-shadow: 0 5px 15px rgba(40,167,69,0.6);
+    }
+    .usdt {
+      background: linear-gradient(45deg, #2c3e50, #34495e);
+      box-shadow: 0 5px 15px rgba(44,62,80,0.6);
+    }
+    #message {
+      text-align: center;
+      margin-top: 30px;
+      color: green;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Select Withdraw Method</h2>
+
+  <div class="method">
+    <a href="withdraw-mobile.html" style="text-decoration: none;">
+      <button class="mobile">Withdraw via Mobile (TZS)</button>
+    </a>
+    <a href="usdt-withdraw.html" style="text-decoration: none;">
+      <button class="usdt">Withdraw via USDT</button>
+    </a>
+  </div>
+
+  <p id="message"></p>
+
+</body>
+</html>

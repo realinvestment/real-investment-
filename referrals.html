@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Referral Tree</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      padding: 30px;
+      margin: 0;
+    }
+
+    .tree-header {
+      font-size: 26px;
+      font-weight: bold;
+      color: #185a9d;
+      margin-bottom: -5px;
+      position: relative;
+    }
+
+    .tree {
+      margin-top: 10px;
+    }
+
+    .tree ul {
+      padding-top: 20px;
+      position: relative;
+      display: table;
+      margin: 0 auto;
+    }
+
+    .tree ul::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 2px solid #ccc;
+      height: 20px;
+    }
+
+    .tree li {
+      display: table-cell;
+      text-align: center;
+      vertical-align: top;
+      position: relative;
+      padding: 20px 5px 0 5px;
+    }
+
+    .tree li::before,
+    .tree li::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 20px;
+      border-top: 2px solid #ccc;
+    }
+
+    .tree li::before {
+      right: 50%;
+      border-right: 2px solid #ccc;
+    }
+
+    .tree li::after {
+      left: 50%;
+      border-left: 2px solid #ccc;
+    }
+
+    .tree li:only-child::before,
+    .tree li:only-child::after {
+      display: none;
+    }
+
+    .tree li:only-child {
+      padding-top: 0;
+    }
+
+    .tree li:first-child::before,
+    .tree li:last-child::after {
+      border: none;
+    }
+
+    .node {
+      width: 120px;
+      background-color: #fff;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 10px;
+      margin: auto;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .name {
+      font-weight: bold;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .amount {
+      color: #007bff;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .mentor-label {
+      margin-top: 5px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #888;
+    }
+
+    .bottom-controls {
+      margin-top: 40px;
+    }
+
+    .btn-home {
+      background: #185a9d;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-home:hover {
+      background: #43cea2;
+      color: #185a9d;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tree-header">Referral Tree</div>
+
+  <div class="tree" id="referralTree"></div>
+
+  <div class="bottom-controls">
+    <button class="btn-home" onclick="goHome()">← Back Home</button>
+  </div>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const referralTreeContainer = document.getElementById('referralTree');
+    const exchangeRate = 2600; // 1 USD = 2600 TZS
+
+    function buildTree(phone) {
+      const rootUser = users.find(u => u.phone === phone);
+      if (!rootUser) {
+        referralTreeContainer.innerHTML = "<p>User not found.</p>";
+        return;
+      }
+
+      function formatAmount(usd) {
+        const tzs = usd * exchangeRate;
+        return `$${usd.toFixed(2)} / TSh ${tzs.toLocaleString()}`;
+      }
+
+      function createNode(user, isRoot = false) {
+        const children = users.filter(u => u.referredBy === user.phone);
+        return `
+          <li>
+            <div class="node">
+              <div class="icon">👤</div>
+              <div class="name">${user.name || 'N/A'}</div>
+              <div class="amount">${formatAmount(user.deposit || 0)}</div>
+              ${isRoot ? `<div class="mentor-label">Mentor</div>` : ''}
+            </div>
+            ${children.length > 0 ? `<ul>${children.map(child => createNode(child)).join('')}</ul>` : ''}
+          </li>
+        `;
+      }
+
+      referralTreeContainer.innerHTML = `<ul>${createNode(rootUser, true)}</ul>`;
+    }
+
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
+    window.onload = function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralPhone = urlParams.get("ref");
+
+      if (currentUser) {
+        buildTree(currentUser.phone);
+      } else if (referralPhone) {
+        buildTree(referralPhone);
+      } else {
+        referralTreeContainer.innerHTML = `
+          <p>No user session or referral link detected.</p>
+          <button onclick="window.location.href='index.html'">Go to Signup</button>
+        `;
+      }
+    };
+  </script>
+</body>
+</html>

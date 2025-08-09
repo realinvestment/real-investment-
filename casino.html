@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Casino</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #000000, #333333);
+      color: #fff;
+    }
+
+    header {
+      background: #111;
+      padding: 1rem 2rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    .casino-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .casino-card {
+      background: #222;
+      padding: 1.5rem;
+      border-radius: 15px;
+      text-align: center;
+      width: 220px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .casino-card:hover {
+      background: #333;
+      transform: translateY(-5px);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .casino-card i {
+      font-size: 3rem;
+      color: #ffc107;
+      margin-bottom: 1rem;
+    }
+
+    .casino-card h3 {
+      margin: 0.5rem 0;
+    }
+
+    .back-btn {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 0.75rem 2rem;
+      background: #28a745;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1><i class="fa-solid fa-dice"></i> Casino Games</h1>
+  </header>
+
+  <div class="casino-container">
+    <div class="casino-card" onclick="window.location.href='roulette.html'">
+      <i class="fa-solid fa-circle-notch"></i>
+      <h3>Roulette Spin</h3>
+      <p>Place your bets and spin the wheel!</p>
+    </div>
+
+    <div class="casino-card" onclick="window.location.href='aviator.html'">
+      <i class="fa-solid fa-paper-plane"></i>
+      <h3>Aviator Game</h3>
+      <p>Bet on the plane before it flies off!</p>
+    </div>
+
+    <div class="casino-card" onclick="window.location.href='slot.html'">
+      <i class="fa-solid fa-lemon"></i>
+      <h3>Fruit Slot</h3>
+      <p>Spin the reels and win big fruits!</p>
+    </div>
+  </div>
+
+  <button class="back-btn" onclick="window.location.href='home.html'">
+    <i class="fa-solid fa-arrow-left"></i> Back to Home
+  </button>
+
+</body>
+</html>

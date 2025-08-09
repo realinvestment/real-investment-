@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #1f2937;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      padding: 1.5rem;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .card {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .card button:hover {
+      background-color: #1d4ed8;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔐 Admin Dashboard</h1>
+  </header>
+
+  <div class="container">
+    <div class="card-grid">
+
+      <div class="card">
+        <h2>Deposit Requests</h2>
+        <p>View and approve user deposit requests</p>
+        <button onclick="window.location.href='deposit-requests.html'">View</button>
+      </div>
+
+      <div class="card">
+        <h2>Withdraw Requests</h2>
+        <p>Approve pending withdrawal requests</p>
+        <button onclick="window.location.href='withdraw-requests.html'">View</button>
+      </div>
+
+      <div class="card">
+        <h2>Users</h2>
+        <p>Manage users and their balances</p>
+        <button onclick="window.location.href='user-management.html'">Manage</button>
+      </div>
+
+      <div class="card">
+        <h2>Recharge History</h2>
+        <p>Track all recharge transactions</p>
+        <button onclick="window.location.href='recharge-history.html'">View</button>
+      </div>
+
+      <div class="card">
+        <h2>Withdraw History</h2>
+        <p>Review completed withdrawals</p>
+        <button onclick="window.location.href='withdraw2-history.html'">View</button>
+      </div>
+
+      <div class="card">
+        <h2>Add Balance</h2>
+        <p>Top-up balance to any user account</p>
+        <button onclick="window.location.href='add-balance.html'">Add</button>
+      </div>
+
+      <div class="card">
+        <h2>Announcements</h2>
+        <p>Send updates or notifications to users</p>
+        <button onclick="window.location.href='announcements.html'">Send</button>
+      </div>
+
+      <div class="card">
+        <h2>Password Requests</h2>
+        <p>Review password reset requests</p>
+        <button onclick="window.location.href='admin-password-requests.html'">View</button>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Real Investment | Admin Panel
+  </footer>
+</body>
+</html>

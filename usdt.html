@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deposit via USDT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #2196f3, #21cbf3);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    header h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .back-btn {
+      color: #ffc107;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    main {
+      flex-grow: 1;
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #4caf50;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 1rem;
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
+    }
+
+    button:hover {
+      background-color: #43a047;
+    }
+
+    .note, .warning {
+      font-size: 0.95rem;
+      margin-top: 1rem;
+      color: #ffffcc;
+      background: rgba(0,0,0,0.2);
+      padding: 0.75rem;
+      border-radius: 10px;
+    }
+
+    #walletBox {
+      font-weight: bold;
+      color: #ffeb3b;
+      margin-top: 0.5rem;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="back-btn" onclick="window.location.href='home.html'"><i class="fas fa-arrow-left"></i> Back</span>
+    <h2>USDT Deposit</h2>
+    <div></div>
+  </header>
+
+  <main>
+    <label for="network">Select Network:</label>
+    <select id="network" onchange="showWallet()">
+      <option value="">-- Choose Network --</option>
+      <option value="TRC20">TRC20</option>
+      <option value="BEP20">BEP20</option>
+    </select>
+
+    <div class="note">
+      Send USDT to the address below (Network: <span id="selectedNetwork">---</span>):
+      <div id="walletBox"></div>
+    </div>
+
+    <div class="warning" id="networkNote" style="display:none;"></div>
+
+    <label for="wallet">Your Wallet Address:</label>
+    <input type="text" id="wallet" placeholder="Enter your USDT wallet address" />
+
+    <label for="amount">Amount (Minimum 5 USDT):</label>
+    <input type="number" id="amount" placeholder="Enter amount" />
+
+    <label for="pin">Transaction PIN:</label>
+    <input type="password" id="pin" placeholder="Enter your login PIN" />
+
+    <button onclick="submitDeposit()">Submit Deposit</button>
+
+    <div class="note">⏳ Your deposit will reflect after admin approval.</div>
+  </main>
+
+  <script>
+    const wallets = {
+      TRC20: "THpSz86DVZbkhf2uL5G7R4WGFXRpj1Kz4v",
+      BEP20: "0xbAe2097EE2C28E0e7b745b3a81ca1d1546D58323"
+    };
+
+    function showWallet() {
+      const network = document.getElementById('network').value;
+      const walletBox = document.getElementById('walletBox');
+      const networkNote = document.getElementById('networkNote');
+      const selectedNetwork = document.getElementById('selectedNetwork');
+
+      if (wallets[network]) {
+        walletBox.textContent = wallets[network];
+        selectedNetwork.textContent = network;
+        networkNote.style.display = 'block';
+        networkNote.innerHTML = `⚠️ Please send only <strong>Tether USD (${network})</strong>. Do not use Ethereum (ERC20) or other networks. Funds sent via unsupported networks will be lost!`;
+      } else {
+        walletBox.textContent = '';
+        selectedNetwork.textContent = '---';
+        networkNote.style.display = 'none';
+      }
+    }
+
+    function submitDeposit() {
+      const network = document.getElementById('network').value;
+      const wallet = document.getElementById('wallet').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const pin = document.getElementById('pin').value.trim();
+      const minDeposit = 5;
+
+      if (!network || !wallet || !amount || !pin) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (amount < minDeposit) {
+        alert(`Minimum deposit is ${minDeposit} USDT.`);
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (!currentUser) return alert("User not logged in.");
+
+      const userIndex = users.findIndex(u => u.phone === currentUser.phone && u.password === currentUser.password);
+      if (userIndex === -1) return alert("User not found.");
+
+      if (pin !== currentUser.password) {
+        alert("Incorrect PIN.");
+        return;
+      }
+
+      const depositHistory = JSON.parse(localStorage.getItem("usdtDeposits")) || [];
+      depositHistory.push({
+        phone: currentUser.phone,
+        name: currentUser.name,
+        network,
+        wallet,
+        amount: amount.toFixed(2),
+        status: "Pending",
+        date: new Date().toLocaleString()
+      });
+
+      localStorage.setItem("usdtDeposits", JSON.stringify(depositHistory));
+      alert("Deposit submitted successfully. Await admin approval.");
+      window.location.href = "home.html";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>P2P Transfer - Real Investment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e88e5, #00acc1);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    header,
+    footer,
+    #bottom-menu,
+    #sidebar-menu,
+    #menu-overlay {
+      display: none;
+    }
+    h2,
+    h3 {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin: 20px;
+    }
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    .box {
+      background: rgba(255, 255, 255, 0.15);
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .locked {
+      background-color: rgba(255, 0, 0, 0.3);
+    }
+    .btn-red {
+      background-color: red;
+      margin-top: 5px;
+    }
+    .btn-blue {
+      background-color: blue;
+      margin-top: 5px;
+    }
+    .btn-orange {
+      background-color: orange;
+      margin-top: 5px;
+    }
+    .name-display {
+      margin-top: 5px;
+      font-weight: bold;
+      color: #ffeb3b;
+    }
+    .warning {
+      color: yellow;
+      font-size: 14px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .status-gold {
+      color: gold;
+      font-weight: bold;
+    }
+    #balanceDisplay {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #ffeb3b;
+    }
+  </style>
+</head>
+<body>
+  <h2><i class="fa-solid fa-right-left"></i> P2P Transfer - Real Investment</h2>
+
+  <div class="section">
+    <h3>1. Open Order (Send Transfer Request)</h3>
+    <div id="balanceDisplay">Balance: Loading...</div>
+    <p><strong>Your Phone:</strong> <span id="yourPhone">Loading...</span></p>
+    <input
+      id="senderPhone"
+      type="text"
+      placeholder="Enter seller phone number"
+      oninput="showReceiverName()"
+    />
+    <div id="receiverName" class="name-display"></div>
+    <input id="amount" type="number" placeholder="Amount" />
+    <select id="currency">
+      <option value="USDT">USDT</option>
+      <option value="TZS">TZS</option>
+    </select>
+    <textarea id="reason" placeholder="Reason (optional)"></textarea>
+    <button onclick="sendRequest()">Send Request</button>
+    <div class="warning">
+      ⚠️ Do not make any payment until your request is approved (status:
+      Approved).
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>2. Your Outgoing Requests</h3>
+    <div id="outgoingList"></div>
+  </div>
+
+  <div class="section">
+    <h3>3. Approve Incoming Requests</h3>
+    <div id="incomingList"></div>
+  </div>
+
+  <div class="section">
+    <h3>4. Held Transfers (Confirm Paid)</h3>
+    <div id="heldList"></div>
+  </div>
+
+  <script>
+    const GAS_FEE_RATE = 0.03; // 3%
+    const TZS_CONVERSION_RATE = 2700; // 1 USDT = 2700 TZS
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    let allRequests = JSON.parse(localStorage.getItem("transferRequests")) || [];
+
+    if (!currentUser) {
+      alert("Please log in first.");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("yourPhone").textContent =
+      currentUser?.phone || "Not logged in";
+
+    function showBalance() {
+      const user = users.find((u) => u.phone === currentUser.phone);
+      if (!user) {
+        document.getElementById("balanceDisplay").textContent = "Balance: 0 USDT";
+        return;
+      }
+      const deposit = user.deposit || 0;
+      let balText = `Balance: ${deposit.toFixed(2)} USDT`;
+      let balTzsText = `Balance (TZS): ${(deposit * TZS_CONVERSION_RATE).toLocaleString('en-US')} TZS`;
+      document.getElementById("balanceDisplay").innerHTML = `${balText}<br>${balTzsText}`;
+    }
+
+    function saveRequests(requests) {
+      localStorage.setItem("transferRequests", JSON.stringify(requests));
+      allRequests = requests;
+    }
+
+    function saveUsers(usersArr) {
+      localStorage.setItem("users", JSON.stringify(usersArr));
+    }
+
+    function findUser(phone) {
+      return users.find((u) => u.phone === phone);
+    }
+
+    function showReceiverName() {
+      const phone = document.getElementById("senderPhone").value.trim();
+      const user = findUser(phone);
+      document.getElementById("receiverName").textContent = user
+        ? `Name: ${user.name}`
+        : "User not found";
+    }
+
+    function sendRequest() {
+      const to = document.getElementById("senderPhone").value.trim();
+      let amount = parseFloat(document.getElementById("amount").value);
+      const currency = document.getElementById("currency").value;
+      const reason = document.getElementById("reason").value.trim();
+
+      if (!to || isNaN(amount) || amount <= 0)
+        return alert("Invalid phone or amount.");
+
+      const receiver = findUser(to);
+      if (!receiver) return alert("Phone number not registered.");
+
+      if (to === currentUser.phone)
+        return alert("You cannot send a request to yourself.");
+
+      // Add new request
+      allRequests.push({
+        id: Date.now(),
+        from: currentUser.phone,
+        to,
+        amount,
+        currency,
+        reason,
+        status: "pending",
+        timestamp: new Date().toISOString(),
+        autoCancelAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+        expiresAt: null,
+        paidNotice: false,
+      });
+
+      saveRequests(allRequests);
+      alert(
+        "Request sent. ⚠️ Do not make any payment until it is approved by the receiver."
+      );
+      location.reload();
+    }
+
+    function renderOutgoing() {
+      const list = document.getElementById("outgoingList");
+      list.innerHTML = "";
+      const outgoing = allRequests.filter(
+        (r) =>
+          r.from === currentUser.phone &&
+          r.status !== "completed" &&
+          r.status !== "cancelled" &&
+          r.status !== "locked"
+      );
+
+      outgoing.forEach((r) => {
+        const receiver = findUser(r.to);
+        const receiverName = receiver ? receiver.name : "User not found";
+
+        const gasFee = +(r.amount * GAS_FEE_RATE).toFixed(2);
+        const totalWithFee = +(r.amount + gasFee).toFixed(2);
+
+        const box = document.createElement("div");
+        box.className = "box";
+
+        let statusText = "";
+        if (r.status === "pending") {
+          statusText = `<span class="status-gold">Pending</span>`;
+        } else if (r.status === "held") {
+          statusText = `<span class="status-gold">✅ Approved - Proceed with payment</span>`;
+        } else if (r.status === "cancelled") {
+          statusText = `<span style="color:gray; font-style: italic;">Cancelled</span>`;
+        } else if (r.status === "locked") {
+          statusText = `<span style="color:red; font-weight:bold;">Locked (Expired)</span>`;
+        } else if (r.status === "completed") {
+          statusText = `<span style="color:lightgreen; font-weight:bold;">Completed</span>`;
+        }
+
+        box.innerHTML = `
+          To: ${receiverName} (${r.to})<br>
+          Amount: ${r.amount} ${r.currency} <br>
+          Gas Fee: ${gasFee} ${r.currency} <br>
+          Total Deducted on Approval: ${totalWithFee} ${r.currency} <br>
+          Reason: ${r.reason || "-"}<br>
+          Status: ${statusText}<br>
+        `;
+
+        if (r.status === "pending") {
+          const cancelBtn = document.createElement("button");
+          cancelBtn.className = "btn-red";
+          cancelBtn.textContent = "Cancel Request";
+          cancelBtn.onclick = () => {
+            const index = allRequests.findIndex((req) => req.id === r.id);
+            if (index !== -1) {
+              allRequests[index].status = "cancelled";
+              saveRequests(allRequests);
+              location.reload();
+            }
+          };
+          box.appendChild(cancelBtn);
+
+          const countdown = document.createElement("div");
+          countdown.className = "warning";
+          box.appendChild(countdown);
+
+          const updateCountdown = () => {
+            const now = Date.now();
+            const timeLeft = r.autoCancelAt - now;
+            if (timeLeft <= 0) {
+              if (r.status === "pending") {
+                const i = allRequests.findIndex((req) => req.id === r.id);
+                if (i !== -1) {
+                  allRequests[i].status = "cancelled";
+                  saveRequests(allRequests);
+                  location.reload();
+                }
+              }
+              return;
+            }
+            const minutes = Math.floor(
+              (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+            );
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            countdown.textContent = `⏳ Auto-cancel in: ${minutes}m ${seconds}s (If not approved)`;
+          };
+
+          updateCountdown();
+          setInterval(updateCountdown, 1000);
+        } else if (r.status === "held") {
+          const paidBtn = document.createElement("button");
+          paidBtn.className = "btn-orange";
+          paidBtn.textContent = "I've Paid";
+          paidBtn.onclick = () => {
+            alert("Notice sent to receiver that you have paid.");
+            r.paidNotice = true;
+            saveRequests(allRequests);
+            location.reload();
+          };
+          box.appendChild(paidBtn);
+
+          const countdown = document.createElement("div");
+          countdown.className = "warning";
+          box.appendChild(countdown);
+
+          const updateCountdown = () => {
+            const now = Date.now();
+            const timeLeft = r.expiresAt - now;
+            if (timeLeft <= 0) {
+              if (r.status === "held") {
+                const idx = allRequests.findIndex((req) => req.id === r.id);
+                if (idx !== -1) {
+                  allRequests[idx].status = "locked";
+                  saveRequests(allRequests);
+                  location.reload();
+                }
+              }
+              return;
+            }
+            const minutes = Math.floor(
+              (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+            );
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            countdown.textContent = `⏳ Time to confirm payment before lock: ${minutes}m ${seconds}s`;
+          };
+          updateCountdown();
+          setInterval(updateCountdown, 1000);
+        }
+
+        list.appendChild(box);
+      });
+    }
+
+    function renderIncoming() {
+      const list = document.getElementById("incomingList");
+      list.innerHTML = "";
+      const incoming = allRequests.filter(
+        (r) => r.to === currentUser.phone && r.status === "pending"
+      );
+
+      incoming.forEach((r) => {
+        const sender = findUser(r.from);
+        const senderName = sender ? sender.name : "User not found";
+
+        const gasFee = +(r.amount * GAS_FEE_RATE).toFixed(2);
+        const totalDeduct = +(r.amount + gasFee).toFixed(2);
+
+        const box = document.createElement("div");
+        box.className = "box";
+        box.innerHTML = `
+          From: ${senderName} (${r.from})<br>
+          Amount: ${r.amount} ${r.currency}<br>
+          Reason: ${r.reason || "-"}<br>
+          <span class="status-gold">Total deducted on your balance (Amount + 3% gas fee): ${totalDeduct} ${r.currency}</span><br>
+          <div class="warning">⚠️ Do not approve unless you have communicated with the requester.<br>
+          After 10 minutes this request auto cancels if not approved.</div>
+        `;
+
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "btn-blue";
+        approveBtn.textContent = "Approve & Hold";
+        approveBtn.onclick = () => {
+          const approverUser = findUser(currentUser.phone);
+          if (!approverUser) {
+            alert("Approver not found.");
+            return;
+          }
+
+          if (approverUser.deposit === undefined) {
+            alert("Approver balance data missing.");
+            return;
+          }
+
+          if (approverUser.deposit < totalDeduct) {
+            alert(
+              `Insufficient balance to cover amount + gas fee (${totalDeduct} ${r.currency})`
+            );
+            return;
+          }
+
+          // Deduct total (amount + gas fee) from approver deposit
+          approverUser.deposit = +(approverUser.deposit - totalDeduct).toFixed(2);
+
+          r.status = "held";
+          r.expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour to confirm payment
+          r.autoCancelAt = null;
+
+          saveRequests(allRequests);
+          saveUsers(users);
+          showBalance();
+          location.reload();
+        };
+        box.appendChild(approveBtn);
+        list.appendChild(box);
+      });
+    }
+
+    function renderHeld() {
+      const list = document.getElementById("heldList");
+      list.innerHTML = "";
+      const held = allRequests.filter(
+        (r) => r.status === "held" && r.to === currentUser.phone
+      );
+
+      held.forEach((r) => {
+        const sender = findUser(r.from);
+        const senderName = sender ? sender.name : "User not found";
+
+        const box = document.createElement("div");
+        box.className = "box locked";
+        box.innerHTML = `
+          From: ${senderName} (${r.from})<br>
+          Amount: ${r.amount} ${r.currency}<br>
+          Reason: ${r.reason || "-"}<br>
+          <p class="warning">
+            ⚠️ Only confirm if you have already received the payment.<br>
+            If not confirmed within 1 hour, this order will be cancelled and your funds will be locked.
+          </p>
+        `;
+
+        const confirmBtn = document.createElement("button");
+        confirmBtn.className = "btn-orange";
+        confirmBtn.textContent = "Confirm Paid to release funds";
+        confirmBtn.onclick = () => {
+          const confirm = window.confirm("Are you sure you've been paid?");
+          if (!confirm) return;
+
+          r.status = "completed";
+
+          const receiverUser = findUser(currentUser.phone);
+          if (receiverUser) {
+            receiverUser.deposit = receiverUser.deposit || 0;
+            receiverUser.deposit += r.amount;
+            saveUsers(users);
+          }
+
+          saveRequests(allRequests);
+          showBalance();
+          location.reload();
+        };
+        box.appendChild(confirmBtn);
+
+        const countdown = document.createElement("div");
+        countdown.className = "warning";
+        box.appendChild(countdown);
+
+        const updateCountdown = () => {
+          const now = Date.now();
+          const timeLeft = r.expiresAt - now;
+          if (timeLeft <= 0) {
+            if (r.status === "held") {
+              const idx = allRequests.findIndex((req) => req.id === r.id);
+              if (idx !== -1) {
+                allRequests[idx].status = "locked";
+                saveRequests(allRequests);
+                location.reload();
+              }
+            }
+            return;
+          }
+          const minutes = Math.floor(
+            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+          countdown.textContent = `⏳ Time to confirm payment before lock: ${minutes}m ${seconds}s`;
+        };
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        list.appendChild(box);
+      });
+    }
+
+    // Initial render
+    showBalance();
+    renderOutgoing();
+    renderIncoming();
+    renderHeld();
+  </script>
+</body>
+</html>

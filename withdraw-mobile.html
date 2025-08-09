@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Withdraw via Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #00bcd4, #3f51b5);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    header h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    .back-btn {
+      color: #ffc107;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    main {
+      flex-grow: 1;
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+    select, input {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    #balance {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #fffacd;
+      margin-bottom: 1rem;
+    }
+    #feeDisplay, #totalDisplay {
+      font-size: 1rem;
+      color: #fffacd;
+      margin-top: 0.5rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: gray;
+      color: #ccc;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: not-allowed;
+      margin-top: 1.5rem;
+      opacity: 0.6;
+    }
+    .disabled-note {
+      font-size: 1rem;
+      margin-top: 1rem;
+      color: #ffe082;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.8rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="back-btn" onclick="window.location.href='withdraw.html'">← Back</span>
+    <h2>Withdraw via Mobile</h2>
+    <div></div>
+  </header>
+
+  <main>
+    <div id="balance">Balance: Loading...</div>
+
+    <label for="network">Select Network:</label>
+    <select id="network" disabled>
+      <option value="">-- Choose Mobile Network --</option>
+      <option value="M-Pesa">M-Pesa</option>
+      <option value="Tigo Pesa">Tigo Pesa</option>
+      <option value="Airtel Money">Airtel Money</option>
+      <option value="HaloPesa">HaloPesa</option>
+    </select>
+
+    <label for="phone">Mobile Number:</label>
+    <input type="text" id="phone" placeholder="e.g. 07XXXXXXXX" disabled />
+
+    <label for="amount">Amount (Min 2,000 TZS):</label>
+    <input type="number" id="amount" placeholder="Enter amount" oninput="updateFee()" disabled />
+
+    <div id="feeDisplay">Fee: -</div>
+    <div id="totalDisplay">Total Deducted: -</div>
+
+    <label for="pin">Transaction PIN:</label>
+    <input type="password" id="pin" placeholder="Enter your PIN" disabled />
+
+    <button disabled>Withdraw (Coming Soon)</button>
+
+    <div class="disabled-note">
+      📌 Withdraw via Mobile is <strong>currently disabled</strong>.<br>
+      This feature will be available in future updates.
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    document.getElementById("balance").innerText = `Balance: ${user?.deposit?.toLocaleString() || "0"} TZS`;
+
+    function updateFee() {
+      const amount = parseFloat(document.getElementById("amount").value) || 0;
+      const fee = 300;
+      const total = amount + fee;
+      document.getElementById("feeDisplay").innerText = `Fee: ${fee} TZS`;
+      document.getElementById("totalDisplay").innerText = `Total Deducted: ${total} TZS`;
+    }
+  </script>
+</body>
+</html>

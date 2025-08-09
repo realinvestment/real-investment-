@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mpangilio wa Mtumiaji</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0066cc, #00ccff);
+      color: #fff;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+
+    body.dark-mode {
+      background: #121212;
+      color: #eee;
+    }
+
+    .top-bar {
+      text-align: right;
+      padding: 1rem 2rem;
+    }
+
+    .top-bar button {
+      background-color: #ffffff33;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 2rem auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    body.dark-mode .container {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.4rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      background: #fff;
+      color: #333;
+    }
+
+    body.dark-mode input, 
+    body.dark-mode select {
+      background-color: #222;
+      color: #eee;
+    }
+
+    button.action-btn {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.9rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button.action-btn:hover {
+      background-color: #0056b3;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button onclick="toggleDarkMode()" id="darkModeBtn">Dark Mode</button>
+  </div>
+
+  <div class="container">
+    <h1 id="pageTitle">Mpangilio wa Mtumiaji</h1>
+
+    <label for="userPhone" id="labelUserPhone">Namba ya Mtumiaji</label>
+    <input type="text" id="userPhone" readonly />
+
+    <label for="userNameInput" id="labelUserName">Jina la Mtumiaji</label>
+    <input type="text" id="userNameInput" placeholder="Andika jina lako hapa" />
+    <button class="action-btn" onclick="saveUserName()" id="saveNameBtn">Hifadhi Jina</button>
+
+    <label for="currentPassword" id="currentPasswordLabel">Nenosiri la Sasa</label>
+    <input type="password" id="currentPassword" placeholder="Weka nenosiri la sasa">
+
+    <label for="newPassword" id="newPasswordLabel">Nenosiri Jipya</label>
+    <input type="password" id="newPassword" placeholder="Weka nenosiri jipya">
+
+    <label for="confirmPassword" id="confirmPasswordLabel">Rudia Nenosiri Jipya</label>
+    <input type="password" id="confirmPassword" placeholder="Rudia nenosiri jipya">
+
+    <button class="action-btn" onclick="changePassword()" id="changePasswordBtn">Badilisha Nenosiri</button>
+
+    <label for="languageSelect" id="languageLabel">Chagua Lugha</label>
+    <select id="languageSelect" onchange="changeLanguage()">
+      <option value="sw">Kiswahili</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <footer>&copy; 2025 Real Investment</footer>
+
+  <script>
+    const userNameInput = document.getElementById("userNameInput");
+    const languageSelect = document.getElementById("languageSelect");
+
+    const translations = {
+      sw: {
+        pageTitle: "Mpangilio wa Mtumiaji",
+        labelUserPhone: "Namba ya Mtumiaji",
+        labelUserName: "Jina la Mtumiaji",
+        saveNameBtn: "Hifadhi Jina",
+        currentPasswordLabel: "Nenosiri la Sasa",
+        newPasswordLabel: "Nenosiri Jipya",
+        confirmPasswordLabel: "Rudia Nenosiri Jipya",
+        changePasswordBtn: "Badilisha Nenosiri",
+        languageLabel: "Chagua Lugha",
+        darkModeBtn: "Dark Mode"
+      },
+      en: {
+        pageTitle: "User Settings",
+        labelUserPhone: "User Number",
+        labelUserName: "User Name",
+        saveNameBtn: "Save Name",
+        currentPasswordLabel: "Current Password",
+        newPasswordLabel: "New Password",
+        confirmPasswordLabel: "Confirm New Password",
+        changePasswordBtn: "Change Password",
+        languageLabel: "Select Language",
+        darkModeBtn: "Dark Mode"
+      }
+    };
+
+    function loadUserData() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+      userNameInput.value = currentUser.name || "";
+      document.getElementById("userPhone").value = currentUser.phone || "";
+      languageSelect.value = localStorage.getItem("language") || "sw";
+      applyLanguage(languageSelect.value);
+    }
+
+    function saveUserName() {
+      const newName = userNameInput.value.trim();
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      let currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+
+      if (!newName) return alert("Jina haliwezi kuwa tupu.");
+
+      users = users.map(user => {
+        if (user.phone === currentUser.phone) {
+          user.name = newName;
+          currentUser.name = newName;
+        }
+        return user;
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      alert("Jina limehifadhiwa.");
+    }
+
+    function changePassword() {
+      const current = document.getElementById("currentPassword").value;
+      const newPass = document.getElementById("newPassword").value;
+      const confirm = document.getElementById("confirmPassword").value;
+
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+      let currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+
+      if (!current || !newPass || !confirm) return alert("Tafadhali jaza sehemu zote.");
+      if (newPass !== confirm) return alert("Nenosiri mpya hayafanani.");
+      if (current !== currentUser.password) return alert("Nenosiri la sasa sio sahihi.");
+
+      users = users.map(user => {
+        if (user.phone === currentUser.phone) {
+          user.password = newPass;
+          currentUser.password = newPass;
+        }
+        return user;
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      alert("Nenosiri limebadilishwa.");
+    }
+
+    function changeLanguage() {
+      const lang = languageSelect.value;
+      localStorage.setItem("language", lang);
+      applyLanguage(lang);
+    }
+
+    function applyLanguage(lang) {
+      const t = translations[lang];
+      document.getElementById("pageTitle").textContent = t.pageTitle;
+      document.getElementById("labelUserPhone").textContent = t.labelUserPhone;
+      document.getElementById("labelUserName").textContent = t.labelUserName;
+      document.getElementById("saveNameBtn").textContent = t.saveNameBtn;
+      document.getElementById("currentPasswordLabel").textContent = t.currentPasswordLabel;
+      document.getElementById("newPasswordLabel").textContent = t.newPasswordLabel;
+      document.getElementById("confirmPasswordLabel").textContent = t.confirmPasswordLabel;
+      document.getElementById("changePasswordBtn").textContent = t.changePasswordBtn;
+      document.getElementById("languageLabel").textContent = t.languageLabel;
+      document.getElementById("darkModeBtn").textContent = t.darkModeBtn;
+    }
+
+    function toggleDarkMode() {
+      const body = document.body;
+      body.classList.toggle("dark-mode");
+    }
+
+    window.addEventListener("DOMContentLoaded", loadUserData);
+  </script>
+</body>
+</html>

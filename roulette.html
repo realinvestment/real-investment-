@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roulette 1-12 Game</title>
+  <style>
+    /* ====== BASIC PAGE STYLING ====== */
+    body {
+      background: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: gold; }
+
+    /* Smooth transition for animations */
+    .wheel, .ball, .number-label, button, input, select {
+      transition: all 0.3s ease;
+    }
+
+    /* ====== ROULETTE WHEEL STYLING ====== */
+    .wheel {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      margin: 20px auto;
+      border: 10px solid #fff;
+      /* 12 alternating red/black sectors (30° each) */
+      background: conic-gradient(
+        red 0 30deg, black 30deg 60deg,
+        red 60deg 90deg, black 90deg 120deg,
+        red 120deg 150deg, black 150deg 180deg,
+        red 180deg 210deg, black 210deg 240deg,
+        red 240deg 270deg, black 270deg 300deg,
+        red 300deg 330deg, black 330deg 360deg
+      );
+      position: relative;
+    }
+
+    /* Number labels inside the wheel */
+    .number-label {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Ball that lands on winning number */
+    .ball {
+      width: 20px;
+      height: 20px;
+      background: yellow;
+      border-radius: 50%;
+      position: absolute;
+      top: 140px;
+      left: 140px;
+      z-index: 10;
+    }
+
+    /* Balance & result display */
+    .balance, .result {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    /* Inputs & selects */
+    select, input {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    /* Spin button */
+    button {
+      padding: 10px 25px;
+      font-size: 18px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: none;
+      background: green;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Bet history container */
+    .history {
+      background: #333;
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .history h3 { color: lightgreen; }
+    .history-entry {
+      border-bottom: 1px solid #555;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+
+    /* Payout table styling */
+    table.payout-table {
+      width: 90%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      color: white;
+      font-size: 16px;
+    }
+    table.payout-table th, table.payout-table td {
+      border: 1px solid white;
+      padding: 8px;
+    }
+    table.payout-table th {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Roulette 1–12</h1>
+
+  <!-- Balance display -->
+  <div class="balance" id="balanceDisplay">Balance: Tsh 0 | USDT 0</div>
+
+  <!-- Currency selector -->
+  <select id="currencySelect">
+    <option value="tzs">Tsh</option>
+    <option value="usdt">USDT</option>
+  </select>
+
+  <!-- Bet amount -->
+  <input type="number" id="betAmount" placeholder="Enter amount" min="1" />
+
+  <!-- Number selection -->
+  <select id="betNumber"></select>
+
+  <!-- Color selection -->
+  <select id="betColor">
+    <option value="">Choose Color</option>
+    <option value="red">Red</option>
+    <option value="black">Black</option>
+  </select>
+
+  <!-- Roulette wheel -->
+  <div class="wheel" id="wheel">
+    <div class="ball" id="ball"></div>
+  </div>
+
+  <!-- Spin button -->
+  <button onclick="spin()">SPIN</button>
+  <div class="result" id="result"></div>
+
+  <!-- Payout Table -->
+  <table class="payout-table">
+    <thead>
+      <tr><th>Winning</th><th>Payout</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Correct Number and Color</td><td>×4</td></tr>
+      <tr><td>Correct Number only</td><td>×2</td></tr>
+      <tr><td>Correct Color only</td><td>×1.5</td></tr>
+      <tr><td>No Win</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Bet history -->
+  <div class="history" id="historySection">
+    <h3>Bet History (Last 7 Days)</h3>
+    <div id="historyList"><i>No bets yet</i></div>
+  </div>
+
+  <!-- Sounds -->
+  <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+  <audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
+  <script>
+    /* ====== DOM ELEMENTS ====== */
+    const balanceDisplay = document.getElementById("balanceDisplay");
+    const currencySelect = document.getElementById("currencySelect");
+    const betAmount = document.getElementById("betAmount");
+    const betNumber = document.getElementById("betNumber");
+    const betColor = document.getElementById("betColor");
+    const result = document.getElementById("result");
+    const wheel = document.getElementById("wheel");
+    const ball = document.getElementById("ball");
+    const historyList = document.getElementById("historyList");
+    const winSound = document.getElementById("winSound");
+    const loseSound = document.getElementById("loseSound");
+
+    /* ====== CONSTANTS ====== */
+    const conversionRate = 2600; // 1 USDT = 2600 Tsh
+    const colors = ["red", "black", "red", "black", "red", "black", "red", "black", "red", "black", "red", "black"];
+
+    /* ====== INITIAL WHEEL SETUP ====== */
+    for (let i = 1; i <= 12; i++) {
+      // Add option to betNumber dropdown
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      betNumber.appendChild(opt);
+
+      // Create number label for wheel
+      const label = document.createElement("div");
+      label.className = "number-label";
+      const deg = i * 30 - 15;
+      const rad = deg * Math.PI / 180;
+      const x = 150 + Math.cos(rad) * 120 - 15;
+      const y = 150 + Math.sin(rad) * 120 - 15;
+      label.style.left = `${x}px`;
+      label.style.top = `${y}px`;
+      label.textContent = i;
+      label.style.color = colors[i - 1];
+      wheel.appendChild(label);
+    }
+
+    /* ====== BALANCE FUNCTIONS ====== */
+    function getCurrentUser() {
+      return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+    }
+    function saveCurrentUser(user) {
+      localStorage.setItem("currentUser", JSON.stringify(user));
+    }
+    function updateBalanceDisplay() {
+      const user = getCurrentUser();
+      const usdt = user.deposit || 0;
+      const tzs = usdt * conversionRate;
+      balanceDisplay.textContent = `Balance: Tsh ${tzs.toLocaleString()} | USDT ${usdt.toFixed(2)}`;
+    }
+
+    /* ====== MAIN GAME FUNCTION ====== */
+    function spin() {
+      const amount = parseFloat(betAmount.value);
+      const chosenNumber = parseInt(betNumber.value);
+      const chosenColor = betColor.value;
+      const user = getCurrentUser();
+      const currency = currencySelect.value;
+      const balanceUSDT = user.deposit || 0;
+
+      // Validate bet
+      if (!amount || amount < 1 || !chosenNumber || !chosenColor) {
+        result.textContent = "⚠️ Please enter a valid amount, number, and color.";
+        return;
+      }
+
+      // Convert Tsh to USDT if needed
+      const bettingInTsh = currency === "tzs";
+      const betAmountUSDT = bettingInTsh ? amount / conversionRate : amount;
+
+      // Check balance
+      if (balanceUSDT < betAmountUSDT) {
+        result.textContent = "❌ Insufficient balance.";
+        return;
+      }
+
+      // Deduct bet from balance
+      user.deposit -= betAmountUSDT;
+      saveCurrentUser(user);
+      updateBalanceDisplay();
+
+      // Spin wheel animation
+      const spinDegrees = 1440 + Math.floor(Math.random() * 360); // multiple spins + random
+      wheel.style.transition = "transform 4s ease-out";
+      wheel.style.transform = `rotate(${spinDegrees}deg)`;
+
+      const finalDegrees = spinDegrees % 360;
+      const sector = Math.floor(finalDegrees / 30); // each sector is 30°
+      const winningNumber = sector + 1;
+      const winningColor = colors[sector];
+
+      // Move ball to winning sector
+      const angleRad = (sector * 30 + 15) * Math.PI / 180;
+      const x = Math.cos(angleRad) * 120;
+      const y = Math.sin(angleRad) * 120;
+
+      ball.style.transition = "none";
+      ball.style.transform = "translate(0,0)";
+      setTimeout(() => {
+        ball.style.transition = "transform 1s ease-out";
+        ball.style.transform = `translate(${x}px, ${y}px)`;
+      }, 4000);
+
+      // Result calculation after animation
+      setTimeout(() => {
+        const isLoss = Math.random() < 0.75; // 75% chance to lose
+        let payout = 0;
+        let message = `🎯 Number: ${winningNumber}, Color: ${winningColor.toUpperCase()}. `;
+
+        if (isLoss) {
+          // Forced loss
+          result.textContent = message + `❌ You lost ${bettingInTsh ? "Tsh " + amount : amount + " USDT"}`;
+          loseSound.play();
+        } else {
+          // Win conditions
+          if (winningNumber === chosenNumber && winningColor === chosenColor) {
+            payout = betAmountUSDT * 4;
+            message += `🎉 Congratulations! Win ×4 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
+          } else if (winningNumber === chosenNumber) {
+            payout = betAmountUSDT * 2;
+            message += `✅ Correct Number! Win ×2 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
+          } else if (winningColor === chosenColor) {
+            payout = betAmountUSDT * 1.5;
+            message += `✅ Correct Color! Win ×1.5 = ${bettingInTsh ? "Tsh " + (payout * conversionRate).toFixed(0) : payout.toFixed(2) + " USDT"}`;
+          } else {
+            message += `❌ You lost`;
+          }
+
+          // Add payout to balance
+          if (payout > 0) {
+            user.deposit += payout;
+            saveCurrentUser(user);
+            updateBalanceDisplay();
+            winSound.play();
+          } else {
+            loseSound.play();
+          }
+
+          result.textContent = message;
+        }
+
+        // Save bet history
+        saveBetHistory({
+          amount,
+          currency,
+          guessNumber: chosenNumber,
+          guessColor: chosenColor,
+          resultNumber: winningNumber,
+          resultColor: winningColor,
+          payout,
+          timestamp: new Date().toISOString()
+        });
+
+        renderBetHistory();
+      }, 5200);
+    }
+
+    /* ====== BET HISTORY FUNCTIONS ====== */
+    function saveBetHistory(entry) {
+      let history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
+      const now = Date.now();
+
+      // Keep only last 7 days
+      history = history.filter(item => now - new Date(item.timestamp).getTime() < 7 * 24 * 60 * 60 * 1000);
+
+      // Add newest entry at the top
+      history.unshift(entry);
+
+      localStorage.setItem("rouletteBetHistory", JSON.stringify(history));
+    }
+
+    function renderBetHistory() {
+      const history = JSON.parse(localStorage.getItem("rouletteBetHistory") || "[]");
+      if (history.length === 0) {
+        historyList.innerHTML = "<i>No recent bets</i>";
+        return;
+      }
+      historyList.innerHTML = history.map(h => `
+        <div class="history-entry">
+          Bet: ${h.amount} ${h.currency.toUpperCase()} | Guess: ${h.guessNumber} - ${h.guessColor} | 
+          Result: ${h.resultNumber} - ${h.resultColor} | Winnings: ${h.payout > 0 ? (h.payout * (h.currency === 'tzs' ? conversionRate : 1)).toFixed(2) : 0} ${h.currency.toUpperCase()}
+        </div>
+      `).join("");
+    }
+
+    /* ====== ON PAGE LOAD ====== */
+    window.onload = () => {
+      updateBalanceDisplay();
+      renderBetHistory();
+    };
+  </script>
+</body>
+</html>

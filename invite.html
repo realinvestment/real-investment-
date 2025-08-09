@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Referral Link - Lucky Wheel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #f9fafb;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(31, 41, 55, 0.95);
+      max-width: 480px;
+      width: 100%;
+      border-radius: 18px;
+      padding: 35px 40px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin-bottom: 0.7rem;
+      color: #38bdf8;
+      text-shadow: 0 0 8px #0ea5e9;
+    }
+
+    p.description {
+      margin-bottom: 30px;
+      font-weight: 500;
+      font-size: 1rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    input#referralLink {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      background: #334155;
+      color: #e2e8f0;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+      user-select: all;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+    }
+
+    input#referralLink:focus {
+      outline: none;
+      background: #475569;
+      box-shadow: 0 0 12px #38bdf8;
+      color: #f8fafc;
+    }
+
+    button.copyBtn {
+      margin-top: 20px;
+      background: #0ea5e9;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(14,165,233,0.5);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button.copyBtn:hover {
+      background: #0284c7;
+      box-shadow: 0 8px 25px rgba(2,132,199,0.6);
+    }
+
+    .copyMsg {
+      margin-top: 15px;
+      font-weight: 600;
+      color: #34d399;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      user-select: none;
+    }
+
+    .copyMsg.visible {
+      opacity: 1;
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        padding: 25px 20px;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+      button.copyBtn {
+        font-size: 1rem;
+        padding: 12px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="Referral link section">
+    <h2>Referral Link Yako</h2>
+    <p class="description">Shirikisha link hii kwa marafiki zako ili wawekeze na wewe upate commission.</p>
+    <input
+      type="text"
+      id="referralLink"
+      readonly
+      aria-readonly="true"
+      aria-label="Referral link"
+      title="Bonyeza hapa kunakili link"
+      onclick="this.select()"
+    />
+    <button class="copyBtn" onclick="copyLink()">Nakili Link</button>
+    <p id="copyMsg" class="copyMsg">Link imenakiliwa kikamilifu!</p>
+  </div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    if (!currentUser) {
+      alert("Tafadhali ingia kwanza.");
+      window.location.href = "registration.html";
+    } else {
+      const baseUrl = window.location.origin + "/registration.html";
+      const referralLink = `${baseUrl}?ref=${encodeURIComponent(currentUser.phone)}`;
+      const input = document.getElementById("referralLink");
+      input.value = referralLink;
+    }
+
+    function copyLink() {
+      const input = document.getElementById("referralLink");
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      navigator.clipboard.writeText(input.value).then(() => {
+        const msg = document.getElementById("copyMsg");
+        msg.classList.add("visible");
+        setTimeout(() => {
+          msg.classList.remove("visible");
+        }, 2500);
+      }).catch(() => {
+        alert("Kosa: Imeshindikana kunakili link.");
+      });
+    }
+  </script>
+</body>
+</html>

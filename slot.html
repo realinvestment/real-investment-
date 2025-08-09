@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎰 Slot Machine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1b1b1b, #000);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-size: 2em;
+    }
+    .balance {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .slot-machine {
+      display: flex;
+      gap: 10px;
+      background: #222;
+      padding: 20px;
+      border: 5px solid gold;
+      border-radius: 15px;
+      box-shadow: 0 0 20px gold;
+      margin-bottom: 20px;
+    }
+    .reel {
+      background: #111;
+      border: 2px solid #fff;
+      border-radius: 10px;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      font-weight: bold;
+      color: gold;
+    }
+    input, select, button {
+      padding: 10px;
+      font-size: 1em;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background: gold;
+      color: #000;
+      cursor: pointer;
+    }
+    button:hover {
+      background: orange;
+    }
+    .result {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+    .history {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 400px;
+      background: #111;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .history h3 {
+      color: gold;
+      margin-bottom: 10px;
+    }
+    .history-item {
+      font-size: 0.9em;
+      border-bottom: 1px solid #333;
+      padding: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎰 Slot Machine</h1>
+<div class="balance" id="balance">Balance: USDT 0.00 | TZS 0.00</div>
+
+<div class="slot-machine">
+  <div class="reel" id="reel1">🍒</div>
+  <div class="reel" id="reel2">🍋</div>
+  <div class="reel" id="reel3">🍊</div>
+</div>
+
+<select id="currency">
+  <option value="usdt">USDT</option>
+  <option value="tzs">TZS</option>
+</select>
+<input type="number" id="betAmount" placeholder="Enter amount..." min="1" />
+<button onclick="spinSlots()">Spin</button>
+<div class="result" id="resultText"></div>
+
+<div class="history">
+  <h3>Bet History</h3>
+  <div id="historyList"></div>
+</div>
+
+<audio id="spinSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+<audio id="winSound" src="https://www.soundjay.com/button/beep-08b.wav"></audio>
+<audio id="loseSound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
+
+<script>
+  const symbols = ['🍒', '🍋', '🍊', '🍇', '🍉', '⭐', '💎'];
+  const usdToTzsRate = 2600;
+
+  function getUser() {
+    return JSON.parse(localStorage.getItem("currentUser")) || { deposit: 0 };
+  }
+
+  function saveUser(user) {
+    localStorage.setItem("currentUser", JSON.stringify(user));
+  }
+
+  function formatMoney(n) {
+    return n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  function updateBalance() {
+    const user = getUser();
+    const usdt = user.deposit || 0;
+    const tzs = usdt * usdToTzsRate;
+    document.getElementById("balance").innerText = `Balance: USDT ${formatMoney(usdt)} | TZS ${formatMoney(tzs)}`;
+  }
+
+  function getRandomSymbol() {
+    return symbols[Math.floor(Math.random() * symbols.length)];
+  }
+
+  function animateReel(reel, symbol, delay) {
+    let count = 0;
+    const spin = setInterval(() => {
+      reel.textContent = getRandomSymbol();
+      count++;
+      if (count >= 20) {
+        clearInterval(spin);
+        reel.textContent = symbol;
+      }
+    }, delay);
+  }
+
+  function spinSlots() {
+    const currency = document.getElementById("currency").value;
+    const amount = parseFloat(document.getElementById("betAmount").value);
+    const result = document.getElementById("resultText");
+    const user = getUser();
+    let balance = user.deposit || 0;
+
+    if (!amount || amount <= 0) {
+      result.innerText = "⚠️ Invalid amount!";
+      return;
+    }
+
+    let amountInUsdt = currency === 'tzs' ? amount / usdToTzsRate : amount;
+    if (amountInUsdt > balance) {
+      result.innerText = "❌ Insufficient balance!";
+      return;
+    }
+
+    document.getElementById("spinSound").play();
+
+    const r1 = getRandomSymbol(), r2 = getRandomSymbol(), r3 = getRandomSymbol();
+    animateReel(document.getElementById("reel1"), r1, 100);
+    animateReel(document.getElementById("reel2"), r2, 120);
+    animateReel(document.getElementById("reel3"), r3, 140);
+
+    setTimeout(() => {
+      let winnings = 0;
+      let winType = 'Lose';
+      const now = new Date();
+      if (r1 === r2 && r2 === r3) {
+        winnings = amountInUsdt * 5;
+        winType = 'Jackpot';
+        document.getElementById("winSound").play();
+      } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+        winnings = amountInUsdt * 2;
+        winType = 'Win';
+        document.getElementById("winSound").play();
+      } else {
+        winnings = 0;
+        document.getElementById("loseSound").play();
+      }
+
+      if (winnings === 0) {
+        balance -= amountInUsdt;
+        result.innerText = `❌ You lost ${currency === 'tzs' ? 'TZS' : 'USDT'} ${formatMoney(currency === 'tzs' ? amount : amountInUsdt)}`;
+      } else {
+        balance += winnings - amountInUsdt;
+        result.innerText = `🎉 ${winType}! You won ${currency === 'tzs' ? 'TZS' : 'USDT'} ${formatMoney(currency === 'tzs' ? winnings * usdToTzsRate : winnings)}`;
+      }
+
+      user.deposit = balance;
+      saveUser(user);
+      updateBalance();
+      saveHistory({
+        date: now.toISOString(),
+        symbols: `${r1} ${r2} ${r3}`,
+        type: winType,
+        currency,
+        amount,
+        payout: winnings * (currency === 'tzs' ? usdToTzsRate : 1)
+      });
+    }, 2500);
+  }
+
+  function saveHistory(entry) {
+    const history = JSON.parse(localStorage.getItem("slotHistory") || "[]");
+    history.unshift(entry);
+    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const filtered = history.filter(h => new Date(h.date).getTime() > cutoff);
+    localStorage.setItem("slotHistory", JSON.stringify(filtered));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById("historyList");
+    const history = JSON.parse(localStorage.getItem("slotHistory") || "[]");
+    list.innerHTML = history.map(h => `
+      <div class="history-item">
+        ${new Date(h.date).toLocaleString()}<br>
+        Symbols: ${h.symbols} | ${h.type}<br>
+        Bet: ${h.amount} ${h.currency.toUpperCase()} | Won: ${formatMoney(h.payout)} ${h.currency.toUpperCase()}
+      </div>
+    `).join('');
+  }
+
+  updateBalance();
+  renderHistory();
+</script>
+</body>
+</html>

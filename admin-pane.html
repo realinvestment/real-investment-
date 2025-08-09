@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    button {
+      padding: 4px 10px;
+      margin: 2px;
+      border: none;
+      cursor: pointer;
+    }
+    .approve {
+      background-color: green;
+      color: white;
+    }
+    .reject {
+      background-color: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Orodha ya Watumiaji</h2>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>Jina</th>
+        <th>Namba ya Simu</th>
+        <th>Salio</th>
+        <th>Deposit</th>
+        <th>Ongeza Deposit</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Maombi ya Kutoa Pesa (Withdrawals)</h2>
+  <table id="withdrawalsTable">
+    <thead>
+      <tr>
+        <th>Jina</th>
+        <th>Namba ya Simu</th>
+        <th>Kiasi</th>
+        <th>Muda</th>
+        <th>Status</th>
+        <th>Hatua</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+    // Deposit history array (hifadhi data za deposit zote)
+    const depositHistory = JSON.parse(localStorage.getItem("depositHistory")) || [];
+
+    function renderUsers() {
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+
+      users.forEach((user, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.name}</td>
+          <td>${user.phone}</td>
+          <td>TZS ${Number(user.balance || 0).toLocaleString()}</td>
+          <td>TZS ${Number(user.deposit || 0).toLocaleString()}</td>
+          <td>
+            <input type="number" id="deposit-${index}" placeholder="Weka kiasi" />
+            <button onclick="addDeposit(${index})">Thibitisha</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function addDeposit(index) {
+      const amount = parseFloat(document.getElementById(`deposit-${index}`).value);
+      if (!amount || amount <= 0) {
+        alert("Weka kiasi sahihi.");
+        return;
+      }
+
+      users[index].deposit = (users[index].deposit || 0) + amount;
+      users[index].balance = (users[index].balance || 0) + amount;
+
+      // Ongeza data kwenye depositHistory kwa historia ya deposit
+      depositHistory.push({
+        name: users[index].name,
+        phone: users[index].phone,
+        amount: amount,
+        time: new Date().toLocaleString()
+      });
+
+      // Hifadhi data zote za users na depositHistory
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("depositHistory", JSON.stringify(depositHistory));
+
+      alert("Deposit imeongezwa kwa mafanikio!");
+      renderUsers();
+    }
+
+    function renderWithdrawals() {
+      const tbody = document.querySelector("#withdrawalsTable tbody");
+      tbody.innerHTML = "";
+
+      withdrawals.forEach((w, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${w.name}</td>
+          <td>${w.phone}</td>
+          <td>TZS ${Number(w.amount).toLocaleString()}</td>
+          <td>${w.time}</td>
+          <td>${w.status || "pending"}</td>
+          <td>
+            ${w.status === "pending" ? `
+              <button class="approve" onclick="approveWithdrawal(${i})">Thibitisha</button>
+              <button class="reject" onclick="rejectWithdrawal(${i})">Kataa</button>
+            ` : "-"}
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function approveWithdrawal(index) {
+      const w = withdrawals[index];
+      const user = users.find(u => u.phone === w.phone);
+
+      if (!user) {
+        alert("Mtumiaji hajapatikana.");
+        return;
+      }
+
+      if ((user.deposit || 0) < w.amount) {
+        alert("Mtumiaji hana deposit ya kutosha.");
+        return;
+      }
+
+      user.deposit -= w.amount;
+      withdrawals[index].status = "approved";
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+
+      alert(`Withdrawal ya TZS ${w.amount.toLocaleString()} imethibitishwa.`);
+      renderUsers();
+      renderWithdrawals();
+    }
+
+    function rejectWithdrawal(index) {
+      withdrawals[index].status = "rejected";
+      localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+
+      alert("Withdrawal imekataliwa.");
+      renderWithdrawals();
+    }
+
+    renderUsers();
+    renderWithdrawals();
+  </script>
+</body>
+</html>

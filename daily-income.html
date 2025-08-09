@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #007bff;
+      --light-blue: #eaf6ff;
+      --soft-shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--light-blue);
+    }
+
+    header {
+      background: linear-gradient(135deg, #007bff, #00b4d8);
+      color: white;
+      padding: 25px 20px 40px;
+      text-align: center;
+      position: relative;
+    }
+
+    .profile-pic {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #fff;
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      background: #fff;
+      z-index: 1;
+    }
+
+    .user-info {
+      margin-top: 15px;
+      font-size: 22px;
+      font-weight: 600;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-badge {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 15px;
+      border-radius: 20px;
+      margin-top: 6px;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease-in-out;
+      letter-spacing: 0.5px;
+    }
+
+    .active-badge {
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: #fff;
+    }
+
+    .inactive-badge {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: -30px auto 20px;
+      padding: 25px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px var(--soft-shadow);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 20px 15px;
+      text-align: center;
+      box-shadow: 0 3px 8px var(--soft-shadow);
+      transition: transform 0.2s ease;
+      color: white;
+    }
+
+    .card:nth-child(1) { background: linear-gradient(to right, #00c6ff, #0072ff); }
+    .card:nth-child(2) { background: linear-gradient(to right, #f7971e, #ffd200); }
+    .card:nth-child(3) { background: linear-gradient(to right, #7b4397, #dc2430); }
+    .card:nth-child(4) { background: linear-gradient(to right, #43cea2, #185a9d); }
+    .card:nth-child(5) { background: linear-gradient(to right, #f953c6, #b91d73); }
+    .card:nth-child(6) { background: linear-gradient(to right, #ff9966, #ff5e62); }
+    .card:nth-child(7) { background: linear-gradient(to right, #00f2fe, #4facfe); }
+    .card:nth-child(8) { background: linear-gradient(to right, #ff758c, #ff7eb3); }
+
+    .card h3 {
+      margin: 10px 0 5px;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .card p {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background: #f2f2f2;
+      font-size: 14px;
+      margin-top: 30px;
+      border-top: 1px solid #ddd;
+    }
+
+    .redeem-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(40, 167, 69, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .redeem-btn:hover {
+      background: linear-gradient(135deg, #218838, #1e7e34);
+      box-shadow: 0 5px 15px rgba(33, 136, 56, 0.5);
+    }
+
+    @media (max-width: 480px) {
+      .profile-pic { top: 15px; left: 15px; width: 65px; height: 65px; }
+      .user-info { font-size: 18px; }
+      .redeem-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://via.placeholder.com/100" alt="Profile" class="profile-pic" id="profileImage">
+    <div class="user-info">
+      <div id="userName">Loading...</div>
+      <div id="userPhone" style="font-size: 16px; font-weight: 400; opacity: 0.9;"></div>
+      <div id="userStatus" class="status-badge">Checking...</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <div class="card">
+        <h3><i class="fas fa-wallet"></i> Balance</h3>
+        <p id="balance">$0 / TZS 0</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-hand-holding-usd"></i> Invested</h3>
+        <p id="invested">$0 / TZS 0</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-layer-group"></i> Plan</h3>
+        <p id="plan">N/A</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-percentage"></i> Daily Rate</h3>
+        <p id="rate">0%</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-chart-line"></i> Daily Earnings</h3>
+        <p id="dailyEarnings">$0 / TZS 0</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-clock"></i> Days Remaining</h3>
+        <p id="daysRemaining">0</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-user-friends"></i> Referral Bonus</h3>
+        <p id="referralBonus">$0 / TZS 0</p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-network-wired"></i> Binary Bonus</h3>
+        <p id="binaryBonus">$0 / TZS 0</p>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <button class="redeem-btn" onclick="redeemBonuses()">
+        <i class="fas fa-hand-holding-usd"></i> Redeem Referral and Binary Bonus
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Real Investment. All rights reserved.
+  </div>
+
+  <script>
+    const RATE = 2600;
+
+    function convertToTZS(usd) {
+      return "TZS " + (usd * RATE).toLocaleString();
+    }
+
+    function displayUserData() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const user = users.find(u => u.phone === currentUser.phone);
+      if (!user) return;
+
+      document.getElementById("profileImage").src = user.profilePic || "https://via.placeholder.com/100";
+      document.getElementById("userName").innerText = `Welcome ${user.name || 'User'}`;
+      document.getElementById("userPhone").innerText = user.phone || '';
+
+      let activePlan = null;
+      if (user.investments && user.investments.length > 0) {
+        const now = new Date();
+        activePlan = user.investments.find(p => new Date(p.expiresOn) > now);
+      }
+
+      const statusBadge = document.getElementById("userStatus");
+      if (activePlan) {
+        statusBadge.innerText = "✔ Active Member";
+        statusBadge.className = "status-badge active-badge";
+      } else {
+        statusBadge.innerText = "✖ Not Active";
+        statusBadge.className = "status-badge inactive-badge";
+      }
+
+      const deposit = user.deposit || 0;
+      const invested = user.invested || 0;
+      const referral = user.referralBonus || 0;
+      const binary = user.binaryBonus || 0;
+      const dailyRate = activePlan?.dailyRate || 0;
+      const daily = ((invested * dailyRate) / 100);
+
+      document.getElementById("balance").innerText = `$${deposit} / ${convertToTZS(deposit)}`;
+      document.getElementById("invested").innerText = `$${invested} / ${convertToTZS(invested)}`;
+      document.getElementById("referralBonus").innerText = `$${referral.toFixed(2)} / ${convertToTZS(referral)}`;
+      document.getElementById("binaryBonus").innerText = `$${binary.toFixed(2)} / ${convertToTZS(binary)}`;
+      document.getElementById("dailyEarnings").innerText = `$${daily.toFixed(2)} / ${convertToTZS(daily)}`;
+      document.getElementById("plan").innerText = activePlan?.name || "N/A";
+      document.getElementById("rate").innerText = dailyRate + "%";
+
+      if (activePlan) {
+        const startDate = new Date(activePlan.startDate);
+        const today = new Date();
+        const diff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const planDurations = {
+          'Plan A (Uplink)': 90,
+          'Plan B (Boost)': 100,
+          'Plan C (Launch)': 110,
+          'Plan D (Orbit)': 125,
+          'Plan E (Velocity)': 130,
+          'Plan F (Quantum)': 140,
+          'Plan G (Apex)': 150
+        };
+        const duration = planDurations[activePlan.name] || 0;
+        const remaining = duration - diff;
+        document.getElementById("daysRemaining").innerText = remaining > 0 ? remaining : 0;
+      } else {
+        document.getElementById("daysRemaining").innerText = "0";
+      }
+    }
+
+    function redeemBonuses() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const index = users.findIndex(u => u.phone === currentUser.phone);
+      if (index === -1) return;
+
+      let user = users[index];
+      const referral = user.referralBonus || 0;
+      const binary = user.binaryBonus || 0;
+      const totalBonus = referral + binary;
+
+      if (totalBonus <= 0) {
+        alert("No bonus available to redeem.");
+        return;
+      }
+
+      user.deposit = (user.deposit || 0) + totalBonus;
+      user.referralBonus = 0;
+      user.binaryBonus = 0;
+
+      users[index] = user;
+      localStorage.setItem("users", JSON.stringify(users));
+      alert(`$${totalBonus.toFixed(2)} successfully redeemed to balance.`);
+      displayUserData();
+    }
+
+    window.onload = displayUserData;
+  </script>
+</body>
+</html>

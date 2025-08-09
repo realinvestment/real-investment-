@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invest with Confidence – Real Investment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+      color: #fff;
+      text-align: center;
+      padding: 40px 20px;
+      position: relative;
+    }
+
+    .top-right-signup {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .top-right-signup button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background: gold;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+      transition: 0.3s;
+    }
+
+    .top-right-signup button:hover {
+      background: #e6c200;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+      animation: fadeIn 2s ease;
+    }
+
+    .sub-heading {
+      font-size: 1.3rem;
+      color: #eee;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .highlight {
+      color: #00ffcc;
+      font-weight: bold;
+    }
+
+    .benefits {
+      display: grid;
+      gap: 20px;
+      max-width: 800px;
+      margin: 0 auto 40px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .benefit {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .benefit h3 {
+      color: gold;
+      margin-bottom: 10px;
+    }
+
+    .counters {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 40px 0;
+      flex-wrap: wrap;
+    }
+
+    .counter-box {
+      font-size: 1.8rem;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px 30px;
+      border-radius: 10px;
+      border: 2px solid #00ffcc;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      background: gold;
+      color: #000;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #e6c200;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Right Sign Up Button -->
+  <div class="top-right-signup">
+    <button onclick="window.location.href='signup.html'">Sign Up</button>
+  </div>
+
+  <!-- Main Headline -->
+  <h1>🚀 Start Growing Your Wealth Today with <span class="highlight">Real Investment</span></h1>
+
+  <!-- Tagline / Sub-Heading -->
+  <div class="sub-heading">
+    Unlock your financial freedom with <span class="highlight">daily earnings, secure investments</span>, and life-changing opportunities.<br>
+    Join <span class="highlight">1,000,000+</span> investors who trust Real Investment.
+  </div>
+
+  <div class="benefits">
+    <div class="benefit">
+      <h3>💸 Daily ROI</h3>
+      <p>Earn stable daily returns from your investment. 100% passive income.</p>
+    </div>
+    <div class="benefit">
+      <h3>🔐 Secure & Transparent</h3>
+      <p>Your funds are protected using blockchain-powered smart tracking.</p>
+    </div>
+    <div class="benefit">
+      <h3>🌍 Global Network</h3>
+      <p>Invest with a trusted platform used by investors in 100+ countries.</p>
+    </div>
+    <div class="benefit">
+      <h3>🎁 Referral Bonuses</h3>
+      <p>Get up to 10% bonus when you invite friends and they invest.</p>
+    </div>
+    <div class="benefit">
+      <h3>🧬 Binary Bonus</h3>
+      <p>Earn extra bonuses based on your team structure and performance. Maximize your profits with binary matching.</p>
+    </div>
+    <div class="benefit">
+      <h3>📈 Capping Limit</h3>
+      <p>Withdraw up to $5000+ daily depending on your rank level.</p>
+    </div>
+  </div>
+
+  <div class="counters">
+    <div class="counter-box" id="investors">👥 Investors: 1,000,000+</div>
+    <div class="counter-box" id="invested">💰 Invested: $0</div>
+    <div class="counter-box">⏳ Since: 2020</div>
+  </div>
+
+  <button onclick="window.location.href='signup.html'">🚀 Get Started Now</button>
+
+  <script>
+    let invested = 497000000;
+    const investedDisplay = document.getElementById("invested");
+
+    function animateInvestment() {
+      if (invested < 505000000) {
+        invested += Math.floor(Math.random() * 1500 + 2500);
+        investedDisplay.textContent = "💰 Invested: $" + invested.toLocaleString();
+        requestAnimationFrame(animateInvestment);
+      }
+    }
+
+    animateInvestment();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Withdraw History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f9ff;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 25px;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .history-table th, .history-table td {
+      padding: 12px 15px;
+      text-align: center;
+    }
+    .history-table thead {
+      background-color: #007bff;
+      color: #ffffff;
+    }
+    .history-table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .no-data {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 18px;
+      color: #777;
+    }
+    .back-btn {
+      display: block;
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+    .status-pending {
+      color: orange;
+      font-weight: bold;
+    }
+    .status-completed {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="home.html" class="back-btn">← Back to Dashboard</a>
+
+  <h2>Withdraw History</h2>
+
+  <table class="history-table" id="withdrawTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Amount (USDT)</th>
+        <th>Network</th>
+        <th>Wallet</th>
+        <th>Fee</th>
+        <th>Total Deducted</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="withdrawBody">
+    </tbody>
+  </table>
+
+  <div class="no-data" id="noData" style="display: none;">No withdraw history found.</div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const allWithdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+    const tableBody = document.getElementById("withdrawBody");
+    const noData = document.getElementById("noData");
+
+    const userWithdrawals = allWithdrawals
+      .filter(w => w.user === currentUser?.phone)
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // latest first
+
+    if (userWithdrawals.length === 0) {
+      noData.style.display = "block";
+    } else {
+      userWithdrawals.forEach(w => {
+        const row = document.createElement("tr");
+        const statusClass = w.status === "Completed" ? "status-completed" : "status-pending";
+        row.innerHTML = `
+          <td>${w.date}</td>
+          <td>${w.amount.toFixed(2)}</td>
+          <td>${w.network}</td>
+          <td>${w.wallet}</td>
+          <td>${w.fee.toFixed(2)}</td>
+          <td>${(w.amount + w.fee).toFixed(2)}</td>
+          <td class="${statusClass}">${w.status || 'Pending'}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  </script>
+
+</body>
+</html>

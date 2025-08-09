@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>P2P Transfer History - Real Investment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e88e5, #00acc1);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    h2, h3 {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .section {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin: 20px;
+    }
+    .box {
+      background: rgba(255,255,255,0.15);
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .gold { color: gold; font-weight: bold; }
+    .warning {
+      color: yellow;
+      font-size: 14px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2><i class="fa-solid fa-clock-rotate-left"></i> Transfer History</h2>
+
+  <div class="section">
+    <h3>All Completed / Cancelled / Locked Transfers</h3>
+    <div id="historyList">Loading history...</div>
+  </div>
+
+  <script>
+    const GAS_FEE_RATE = 0.03;
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const allRequests = JSON.parse(localStorage.getItem("transferRequests")) || [];
+
+    function findUser(phone) {
+      return users.find(u => u.phone === phone);
+    }
+
+    function renderTransferHistory() {
+      const historyList = document.getElementById("historyList");
+      historyList.innerHTML = "";
+
+      const history = allRequests.filter(r =>
+        (r.from === currentUser.phone || r.to === currentUser.phone) &&
+        ["completed", "cancelled", "locked"].includes(r.status)
+      );
+
+      if (history.length === 0) {
+        historyList.innerHTML = "<p>No transfer history found.</p>";
+        return;
+      }
+
+      history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      history.forEach(r => {
+        const sender = findUser(r.from);
+        const receiver = findUser(r.to);
+
+        const senderName = sender ? sender.name : "Unknown";
+        const receiverName = receiver ? receiver.name : "Unknown";
+        const gasFee = +(r.amount * GAS_FEE_RATE).toFixed(2);
+
+        const statusColor =
+          r.status === "completed" ? "lightgreen" :
+          r.status === "cancelled" ? "gray" :
+          r.status === "locked" ? "red" : "white";
+
+        const box = document.createElement("div");
+        box.className = "box";
+
+        box.innerHTML = `
+          <strong>From:</strong> ${senderName} (${r.from})<br>
+          <strong>To:</strong> ${receiverName} (${r.to})<br>
+          <strong>Amount:</strong> ${r.amount} ${r.currency}<br>
+          ${r.status === "completed" ? `<strong>Gas Fee:</strong> ${gasFee} ${r.currency}<br>` : ""}
+          <strong>Reason:</strong> ${r.reason || "N/A"}<br>
+          <strong>Date:</strong> ${new Date(r.timestamp).toLocaleString()}<br>
+          <strong>Status:</strong> <span style="color:${statusColor}; font-weight:bold;">${r.status.toUpperCase()}</span>
+        `;
+
+        historyList.appendChild(box);
+      });
+    }
+
+    renderTransferHistory();
+  </script>
+</body>
+</html>

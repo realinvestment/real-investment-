@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orodha ya Watumiaji</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    button {
+      padding: 4px 10px;
+      margin: 2px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Orodha ya Watumiaji</h2>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>Jina</th>
+        <th>Namba ya Simu</th>
+        <th>Salio</th>
+        <th>Deposit</th>
+        <th>Ongeza Deposit</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const depositHistory = JSON.parse(localStorage.getItem("depositHistory")) || [];
+
+    function renderUsers() {
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+
+      users.forEach((user, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.name}</td>
+          <td>${user.phone}</td>
+          <td>TZS ${Number(user.balance || 0).toLocaleString()}</td>
+          <td>TZS ${Number(user.deposit || 0).toLocaleString()}</td>
+          <td>
+            <input type="number" id="deposit-${index}" placeholder="Weka kiasi" />
+            <button onclick="addDeposit(${index})">Thibitisha</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function addDeposit(index) {
+      const amount = parseFloat(document.getElementById(`deposit-${index}`).value);
+      if (!amount || amount <= 0) {
+        alert("Weka kiasi sahihi.");
+        return;
+      }
+
+      users[index].deposit = (users[index].deposit || 0) + amount;
+      users[index].balance = (users[index].balance || 0) + amount;
+
+      depositHistory.push({
+        name: users[index].name,
+        phone: users[index].phone,
+        amount: amount,
+        time: new Date().toLocaleString()
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("depositHistory", JSON.stringify(depositHistory));
+
+      alert("Deposit imeongezwa kwa mafanikio!");
+      renderUsers();
+    }
+
+    renderUsers();
+  </script>
+</body>
+</html>

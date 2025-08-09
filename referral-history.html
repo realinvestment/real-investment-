@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tuzo za Referral</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 30px;
+    }
+
+    .summary {
+      background: #f5faff;
+      border: 1px solid #cde4ff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary p {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    .transfer-btn {
+      display: block;
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      background-color: #00c896;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .transfer-btn:hover {
+      background-color: #009d75;
+    }
+
+    h3 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    .referral-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .referral-list li {
+      background: #fefefe;
+      margin-bottom: 15px;
+      padding: 15px 20px;
+      border-left: 4px solid #00c896;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s;
+    }
+
+    .referral-list li:hover {
+      transform: translateY(-3px);
+    }
+
+    .referral-list strong {
+      color: #007bff;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Tuzo za Referral</h2>
+
+    <div class="summary">
+      <p><strong>Jina:</strong> <span id="userName"></span></p>
+      <p><strong>Namba ya Simu:</strong> <span id="userPhone"></span></p>
+      <p><strong>Commission Jumla:</strong> <span id="commissionAmount"></span> TZS</p>
+      <button class="transfer-btn" onclick="transferCommission()">Hamisha Commission Kwenda Balance</button>
+    </div>
+
+    <h3>Waliowaalikwa</h3>
+    <ul class="referral-list" id="referralList">
+      <!-- List ya referrals itawekwa hapa -->
+    </ul>
+  </div>
+
+  <script>
+    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    const deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+
+    if (!currentUser) {
+      alert("Tafadhali ingia kwanza.");
+      window.location.href = "login.html";
+    } else {
+      document.getElementById("userName").innerText = currentUser.name;
+      document.getElementById("userPhone").innerText = currentUser.phone;
+
+      const referrals = currentUser.referrals || [];
+      let totalCommission = 0;
+      const referralList = document.getElementById("referralList");
+
+      if (referrals.length === 0) {
+        referralList.innerHTML = "<li>Hujaalika mtu yeyote bado.</li>";
+      } else {
+        referrals.forEach(refPhone => {
+          const referredUser = users.find(u => u.phone === refPhone);
+          const userDeposits = deposits.filter(d => d.phone === refPhone);
+          const totalDeposit = userDeposits.reduce((sum, d) => sum + Number(d.amount), 0);
+          const commission = Math.floor(totalDeposit * 0.10);
+
+          totalCommission += commission;
+
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${referredUser ? referredUser.name : 'Haijulikani'}</strong><br/>
+            Namba: ${refPhone}<br/>
+            Jumla ya Deposit: ${totalDeposit.toLocaleString()} TZS<br/>
+            Commission Yako: ${commission.toLocaleString()} TZS
+          `;
+          referralList.appendChild(li);
+        });
+      }
+
+      document.getElementById("commissionAmount").innerText = totalCommission.toLocaleString();
+      localStorage.setItem("referralCommission", totalCommission); // Save temporarily
+    }
+
+    function transferCommission() {
+      let commission = Number(localStorage.getItem("referralCommission") || 0);
+      if (commission <= 0) {
+        alert("Hakuna commission ya kuhamisha.");
+        return;
+      }
+
+      users = users.map(u => {
+        if (u.phone === currentUser.phone) {
+          u.balance = (Number(u.balance) || 0) + commission;
+          currentUser.balance = u.balance; // update local currentUser copy
+        }
+        return u;
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      localStorage.setItem("referralCommission", "0");
+      document.getElementById("commissionAmount").innerText = "0";
+      alert("Commission imeongezwa kwenye balance yako!");
+    }
+  </script>
+</body>
+</html>

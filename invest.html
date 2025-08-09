@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Investment Plans</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #007bff, #00c6ff);
+      margin: 0;
+      padding: 0;
+      padding-bottom: 60px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h2, .balance-info {
+      text-align: center;
+      color: white;
+    }
+    .balance-info {
+      margin-top: -20px;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .packages {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    .card h3 {
+      color: #003366;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .price {
+      font-size: 18px;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 15px;
+    }
+    .details {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    .details li {
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .ecode {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      margin-top: 5px;
+    }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      padding: 12px 0;
+      font-weight: bold;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    footer a {
+      text-decoration: none;
+      color: #007bff;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Investment Plans</h2>
+    <div class="balance-info" id="balanceDisplay"></div>
+    <div class="packages" id="plansContainer"></div>
+  </div>
+
+  <script>
+    const exchangeRate = 2600; // 1 USDT = 2600 TZS
+
+    const plans = [
+      { name: "Plan A (Uplink)", min: 5, max: 14, cap: 100, rate: 1.3, days: 90, referral: 3 },
+      { name: "Plan B (Boost)", min: 15, max: 29, cap: 200, rate: 1.4, days: 100, referral: 4 },
+      { name: "Plan C (Launch)", min: 30, max: 49, cap: 300, rate: 1.5, days: 110, referral: 4.5 },
+      { name: "Plan D (Orbit)", min: 50, max: 999, cap: 500, rate: 1.6, days: 125, referral: 5 },
+      { name: "Plan E (Velocity)", min: 1000, max: 9999, cap: 1000, rate: 1.65, days: 130, referral: 6 },
+      { name: "Plan F (Quantum)", min: 10000, max: 24999, cap: 2500, rate: 1.75, days: 140, referral: 7 },
+      { name: "Plan G (Apex)", min: 25000, max: 100000, cap: 5000, rate: 2.0, days: 150, referral: 8 }
+    ];
+
+    const container = document.getElementById("plansContainer");
+    const balanceDisplay = document.getElementById("balanceDisplay");
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.phone === currentUser.phone);
+    const user = users[userIndex];
+
+    if (!user) {
+      balanceDisplay.innerText = "User not found.";
+    } else {
+      const depositUSDT = user.deposit || 0;
+      const depositTZS = depositUSDT * exchangeRate;
+      balanceDisplay.innerHTML = `Your Balance: <strong>${depositUSDT.toFixed(2)} USDT</strong> (~${depositTZS.toLocaleString()} TZS)`;
+    }
+
+    plans.forEach((plan, index) => {
+      const id = `amount-${index}`;
+      const currencyId = `currency-${index}`;
+      const html = `
+        <div class="card">
+          <h3>${plan.name}</h3>
+          <div class="price">$${plan.min} – $${plan.max}</div>
+          <ul class="details">
+            <li>${plan.days} Days</li>
+            <li>${plan.referral}% Referral</li>
+            <li>${plan.rate}% Daily Income</li>
+            <li>8% Binary</li>
+            <li>$${plan.cap} Capping Limit</li>
+          </ul>
+          <input type="number" placeholder="Enter Amount" id="${id}" />
+          <select id="${currencyId}">
+            <option value="USDT">USDT</option>
+            <option value="TZS">TZS</option>
+          </select>
+          <button onclick="activateInvestment(${index}, '${id}', '${currencyId}')">Invest Now</button>
+          <div class="ecode">Using E-Code</div>
+        </div>
+      `;
+      container.insertAdjacentHTML("beforeend", html);
+    });
+
+    function activateInvestment(index, inputId, currencyId) {
+      const plan = plans[index];
+      let amount = parseFloat(document.getElementById(inputId).value);
+      const currency = document.getElementById(currencyId).value;
+
+      if (currency === "TZS") {
+        amount = amount / exchangeRate;
+      }
+
+      if (isNaN(amount) || amount < plan.min || amount > plan.max) {
+        alert(`Please enter a valid amount between $${plan.min} and $${plan.max} (${(plan.min * exchangeRate).toLocaleString()} TZS – ${(plan.max * exchangeRate).toLocaleString()} TZS)`);
+        return;
+      }
+
+      if (user.deposit < amount) {
+        alert("Insufficient balance.");
+        return;
+      }
+
+      user.deposit -= amount;
+      user.invested = (user.invested || 0) + amount;
+      user.plan = plan.name;
+
+      const now = new Date();
+      const expiresOn = new Date(now);
+      expiresOn.setDate(now.getDate() + plan.days);
+
+      user.investments = user.investments || [];
+      const alreadyActive = user.investments.find(p => p.name === plan.name && new Date(p.expiresOn) > new Date());
+      if (alreadyActive) {
+        alert(`You already have an active investment in ${plan.name}. Wait for it to expire.`);
+        return;
+      }
+
+      user.investments.push({
+        name: plan.name,
+        amount: amount,
+        dailyRate: plan.rate,
+        startDate: now.toISOString(),
+        expiresOn: expiresOn.toISOString(),
+        earned: 0
+      });
+
+      // Referral logic
+      if (user.referredBy) {
+        const refIndex = users.findIndex(u => u.phone === user.referredBy);
+        if (refIndex !== -1) {
+          const bonus = amount * plan.referral / 100;
+          users[refIndex].referralBonus = (users[refIndex].referralBonus || 0) + bonus;
+          users[refIndex].deposit += bonus;
+        }
+      }
+
+      // Binary bonus logic (same as before)
+      let uplinePhone = user.referredBy;
+      let side = user.position || "left";
+      let carriedVolume = amount;
+
+      while (uplinePhone) {
+        const uplineIndex = users.findIndex(u => u.phone === uplinePhone);
+        if (uplineIndex === -1) break;
+
+        const upline = users[uplineIndex];
+        upline.leftVolume = upline.leftVolume || 0;
+        upline.rightVolume = upline.rightVolume || 0;
+
+        if (side === "left") {
+          upline.leftVolume += carriedVolume;
+        } else {
+          upline.rightVolume += carriedVolume;
+        }
+
+        const matchVolume = Math.min(upline.leftVolume, upline.rightVolume);
+        if (matchVolume > 0) {
+          const planCap = plan.cap;
+          const today = new Date().toDateString();
+          upline.binaryBonusDaily = upline.binaryBonusDaily || {};
+          upline.binaryBonus = upline.binaryBonus || 0;
+
+          if (!upline.binaryBonusDaily[today]) {
+            upline.binaryBonusDaily[today] = 0;
+          }
+
+          const bonus = matchVolume * 0.08;
+          const remainingCap = planCap - upline.binaryBonusDaily[today];
+
+          if (remainingCap > 0) {
+            const actualBonus = Math.min(remainingCap, bonus);
+            upline.binaryBonus += actualBonus;
+            upline.binaryBonusDaily[today] += actualBonus;
+            upline.leftVolume -= matchVolume;
+            upline.rightVolume -= matchVolume;
+          }
+        }
+
+        uplinePhone = upline.referredBy;
+        side = upline.position || "left";
+      }
+
+      users[userIndex] = user;
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('currentUser', JSON.stringify(user));
+
+      alert(`Investment successful! You activated ${plan.name} with ${amount.toFixed(2)} USDT`);
+      window.location.href = "home.html";
+    }
+  </script>
+
+  <footer>
+    <a href="previous-activation.html">&larr; View Previous Activation</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tigo Pesa Deposit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #8e44ad, #3498db);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    header h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .back-btn {
+      color: #ffc107;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    main {
+      flex-grow: 1;
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .soon-msg {
+      font-size: 1.2rem;
+      padding: 1.5rem;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      margin-top: 2rem;
+      color: #fff8dc;
+      animation: pulse 2s infinite;
+    }
+
+    .soon-msg strong {
+      color: #ffeb3b;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.03); opacity: 0.85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="back-btn" onclick="window.location.href='home.html'"><i class="fas fa-arrow-left"></i> Back</span>
+    <h2>Tigo Pesa Deposit</h2>
+    <div></div>
+  </header>
+
+  <main>
+    <div class="soon-msg">
+      📲 <strong>Tigo Pesa Deposit</strong> is not yet active.<br><br>
+      Please <strong>stay tuned</strong> – this feature will be <u>available soon</u> in future updates!
+    </div>
+  </main>
+</body>
+</html>

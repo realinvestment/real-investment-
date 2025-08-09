@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <title>Muhtasari wa Wiki - Withdrawals</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .summary-container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .week-summary {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+
+    .week-summary:last-child {
+      border-bottom: none;
+    }
+
+    .week-title {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .approved {
+      color: green;
+    }
+
+    .pending {
+      color: orange;
+    }
+
+    .rejected {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Muhtasari wa Wiki kwa Maombi ya Kutoa Pesa</h2>
+
+  <div class="summary-container" id="weeklyWithdrawals"></div>
+
+  <script>
+    function generateWeeklyWithdrawalSummary() {
+      const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+
+      const weeklyData = {};
+
+      withdrawals.forEach(item => {
+        if (!item.time || !item.amount) return;
+
+        const date = new Date(item.time);
+        const weekKey = getWeekKey(date);
+
+        if (!weeklyData[weekKey]) {
+          weeklyData[weekKey] = { approved: 0, pending: 0, rejected: 0 };
+        }
+
+        const amount = parseFloat(item.amount) || 0;
+        const status = (item.status || "pending").toLowerCase();
+
+        if (status === "approved") {
+          weeklyData[weekKey].approved += amount;
+        } else if (status === "pending") {
+          weeklyData[weekKey].pending += amount;
+        } else if (status === "rejected") {
+          weeklyData[weekKey].rejected += amount;
+        }
+      });
+
+      const summaryDiv = document.getElementById("weeklyWithdrawals");
+      summaryDiv.innerHTML = "";
+
+      const sortedWeeks = Object.keys(weeklyData).sort().reverse();
+
+      sortedWeeks.forEach(week => {
+        const data = weeklyData[week];
+        summaryDiv.innerHTML += `
+          <div class="week-summary">
+            <div class="week-title">${week}</div>
+            <div class="approved">Approved: Tsh ${data.approved.toLocaleString()}</div>
+            <div class="pending">Pending: Tsh ${data.pending.toLocaleString()}</div>
+            <div class="rejected">Rejected: Tsh ${data.rejected.toLocaleString()}</div>
+          </div>
+        `;
+      });
+    }
+
+    function getWeekKey(date) {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const janFirst = new Date(year, 0, 1);
+      const days = Math.floor((d - janFirst) / (24 * 60 * 60 * 1000));
+      const week = Math.ceil((days + janFirst.getDay() + 1) / 7);
+      return `Wiki ya ${week}, ${year}`;
+    }
+
+    window.onload = generateWeeklyWithdrawalSummary;
+  </script>
+
+</body>
+</html>
