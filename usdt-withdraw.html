@@ -86,7 +86,7 @@
 </head>
 <body>
   <header>
-    <span class="back-btn" onclick="window.location.href='withdraw.html'">← Back</span>
+    <span class="back-btn" onclick="window.location.href='home.html'">← Back</span>
     <h2>Withdraw USDT</h2>
     <div></div>
   </header>
@@ -108,8 +108,7 @@
     <div id="feeDisplay">Fee: -</div>
     <div id="totalDisplay">Total Deducted: -</div>
 
-    <label for="pin">Transaction PIN:</label>
-    <input type="password" id="pin" placeholder="Enter your PIN" />
+    <!-- PIN input removed -->
 
     <button onclick="submitWithdraw()">Withdraw</button>
   </main>
@@ -136,18 +135,15 @@
 
       const wallet = document.getElementById("wallet").value.trim();
       const amount = parseFloat(document.getElementById("amount").value);
-      const pin = document.getElementById("pin").value.trim();
       const network = document.getElementById("network").value;
       const fee = getFee(network);
       const total = amount + fee;
 
-      if (!wallet || amount < 10 || !pin) {
+      if (!wallet || amount < 10) {
         return alert("Please fill all fields correctly. Minimum withdrawal is 10 USDT.");
       }
 
-      if (pin !== currentUser.pin) {
-        return alert("Incorrect PIN");
-      }
+      // PIN validation removed
 
       if ((currentUser.deposit || 0) < total) {
         return alert("Insufficient balance for this withdrawal");
@@ -162,6 +158,7 @@
         network,
         fee,
         wallet,
+        status: "Pending",
         date: new Date().toLocaleString()
       });
 
