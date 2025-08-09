@@ -16,7 +16,6 @@
       display: flex;
       flex-direction: column;
     }
-
     header {
       background: rgba(0, 0, 0, 0.3);
       padding: 1rem 2rem;
@@ -25,32 +24,15 @@
       align-items: center;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-
-    header h2 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
+    header h2 { margin: 0; font-size: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td {
       padding: 0.75rem;
       border-bottom: 1px solid rgba(255,255,255,0.2);
       text-align: left;
     }
-
-    th {
-      background: rgba(0,0,0,0.2);
-    }
-
-    tr:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
+    th { background: rgba(0,0,0,0.2); }
+    tr:hover { background: rgba(255,255,255,0.1); }
     button {
       padding: 0.4rem 0.8rem;
       border: none;
@@ -59,18 +41,9 @@
       cursor: pointer;
       color: #fff;
     }
-
-    .approve {
-      background-color: #4caf50;
-    }
-
-    .reject {
-      background-color: #f44336;
-    }
-
-    .status {
-      font-weight: bold;
-    }
+    .approve { background-color: #4caf50; }
+    .reject { background-color: #f44336; }
+    .status { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -128,7 +101,24 @@
 
     function updateStatus(index, status) {
       const deposits = JSON.parse(localStorage.getItem("usdtDeposits")) || [];
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+
       deposits[index].status = status;
+
+      // Ikiwa imekubaliwa, ongeza balance
+      if (status === "Approved") {
+        const phone = deposits[index].phone;
+        const amount = parseFloat(deposits[index].amount);
+        const userIndex = users.findIndex(u => u.phone === phone);
+
+        if (userIndex !== -1) {
+          if (!users[userIndex].deposit) users[userIndex].deposit = 0;
+          users[userIndex].deposit += amount;
+        }
+
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+
       localStorage.setItem("usdtDeposits", JSON.stringify(deposits));
       loadDeposits();
       alert(`Deposit ${status}`);

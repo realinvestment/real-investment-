@@ -16,7 +16,6 @@
       display: flex;
       flex-direction: column;
     }
-
     header {
       background: rgba(0, 0, 0, 0.3);
       padding: 1rem 2rem;
@@ -25,32 +24,15 @@
       align-items: center;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-
-    header h2 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
+    header h2 { margin: 0; font-size: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td {
       padding: 0.75rem;
       border-bottom: 1px solid rgba(255,255,255,0.2);
       text-align: left;
     }
-
-    th {
-      background: rgba(0,0,0,0.2);
-    }
-
-    tr:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
+    th { background: rgba(0,0,0,0.2); }
+    tr:hover { background: rgba(255,255,255,0.1); }
     button {
       padding: 0.4rem 0.8rem;
       border: none;
@@ -59,18 +41,9 @@
       cursor: pointer;
       color: #fff;
     }
-
-    .approve {
-      background-color: #4caf50;
-    }
-
-    .reject {
-      background-color: #f44336;
-    }
-
-    .status {
-      font-weight: bold;
-    }
+    .approve { background-color: #4caf50; }
+    .reject { background-color: #f44336; }
+    .status { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -109,6 +82,7 @@
       withdrawals.forEach((w, index) => {
         const user = users.find(u => u.phone === w.user);
         const name = user ? user.name : "Unknown";
+        const status = w.status || "Pending";
 
         const row = document.createElement("tr");
         row.innerHTML = `
@@ -116,16 +90,16 @@
           <td>${w.user}</td>
           <td>${w.network}</td>
           <td>${w.wallet}</td>
-          <td>${w.amount.toFixed(2)}</td>
-          <td>${w.fee.toFixed(2)}</td>
-          <td>${(w.amount + w.fee).toFixed(2)}</td>
-          <td class="status">${w.status || "Pending"}</td>
+          <td>${parseFloat(w.amount).toFixed(2)}</td>
+          <td>${parseFloat(w.fee).toFixed(2)}</td>
+          <td>${(parseFloat(w.amount) + parseFloat(w.fee)).toFixed(2)}</td>
+          <td class="status">${status}</td>
           <td>${w.date}</td>
           <td>
-            ${!w.status || w.status === "Pending" ? `
+            ${status === "Pending" ? `
               <button class="approve" onclick="updateStatus(${index}, 'Approved')">Approve</button>
               <button class="reject" onclick="updateStatus(${index}, 'Rejected')">Reject</button>
-            ` : w.status}
+            ` : status}
           </td>
         `;
         tableBody.appendChild(row);
@@ -134,7 +108,33 @@
 
     function updateStatus(index, status) {
       const withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
-      withdrawals[index].status = status;
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+
+      if (status === "Approved") {
+        const w = withdrawals[index];
+        const phone = w.user;
+        const total = parseFloat(w.amount) + parseFloat(w.fee);
+
+        const userIndex = users.findIndex(u => u.phone === phone);
+        if (userIndex !== -1) {
+          if (!users[userIndex].deposit) users[userIndex].deposit = 0;
+
+          if (users[userIndex].deposit >= total) {
+            users[userIndex].deposit -= total;
+            withdrawals[index].status = "Approved";
+          } else {
+            alert("User balance is insufficient for this withdrawal!");
+            return;
+          }
+        } else {
+          alert("User not found!");
+          return;
+        }
+      } else {
+        withdrawals[index].status = status;
+      }
+
+      localStorage.setItem("users", JSON.stringify(users));
       localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
       loadWithdrawals();
       alert(`Withdrawal ${status}`);
