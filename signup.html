@@ -138,17 +138,6 @@
     .hidden {
       display: none;
     }
-    @media (max-width: 460px) {
-      .container {
-        padding: 30px 25px 25px 25px;
-      }
-      #promoBanner {
-        font-size: 14px;
-      }
-      #promoBanner .title {
-        font-size: 18px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -161,12 +150,7 @@
     </div>
     <div id="promoBanner">
       <div class="title">
-        <i class="fas fa-coins"></i>
-        Real Investment |
-        <i class="fas fa-chart-line"></i>
-        Safe Passive Income
-        <i class="fas fa-smile"></i>
-        <i class="fas fa-spinner"></i>
+        <i class="fas fa-coins"></i> Real Investment | <i class="fas fa-chart-line"></i> Safe Passive Income
       </div>
       <div class="subtitle" id="promoSubtitle">
         Earn while you sleep. Register now and start your journey to success!
@@ -175,31 +159,24 @@
     <h2 id="form-title">Login</h2>
     <form id="loginForm">
       <div class="input-group hidden" id="nameField">
-        <input type="text" id="fullname" placeholder="Full Name" autocomplete="name" />
+        <input type="text" id="fullname" placeholder="Full Name" />
       </div>
       <div class="input-group hidden" id="referralField">
-        <input type="text" id="referralPhone" placeholder="Referrer's Phone Number (optional)" autocomplete="tel" />
+        <input type="text" id="referralPhone" placeholder="Referrer's Phone Number (optional)" />
       </div>
       <div class="input-group hidden" id="emailField">
-        <input type="email" id="email" placeholder="Email" autocomplete="email" />
+        <input type="email" id="email" placeholder="Email" />
       </div>
       <div class="input-group">
-        <input type="text" id="phone" placeholder="Phone Number" autocomplete="tel" required />
+        <input type="text" id="phone" placeholder="Phone Number" required />
       </div>
       <div class="input-group">
-        <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+        <input type="password" id="password" placeholder="Password" required />
       </div>
       <button type="submit" class="btn" id="submitBtn">Login</button>
     </form>
 
-    <div class="toggle" onclick="toggleForm()">Don't have an account? Sign up here</div>
-    <div class="toggle" onclick="showForgotPassword()">Forgot Password?</div>
-
-    <div id="forgotPasswordModal" class="hidden" style="margin-top: 20px; text-align:center;">
-      <h3 id="forgotPasswordTitle">Forgot Password?</h3>
-      <input type="text" id="forgotPhone" placeholder="Enter your phone number" style="margin-bottom:10px;padding:10px;width:80%;border-radius:10px;border:1px solid #43cea2;" />
-      <button onclick="recoverPassword()" style="padding:10px 20px;border:none;background:#185a9d;color:white;border-radius:10px;cursor:pointer;" id="forgotPasswordBtn">Recover Password</button>
-    </div>
+    <div class="toggle" onclick="toggleForm()" id="toggleLink">Don't have an account? Sign up here</div>
   </div>
 
   <script>
@@ -208,8 +185,7 @@
 
     const strings = {
       sw: {
-        pitch: "Karibu kwenye Real Investment! Jipatie nafasi ya kuwekeza na kushinda zawadi za bonasi papo hapo.",
-        promoSubtitle: "Pata faida kila siku ukiwa umelala. Jisajili sasa na anza safari yako ya maendeleo!",
+        promoSubtitle: "Pata faida kila siku ukiwa umelala. Jisajili sasa!",
         login: "Ingia",
         signup: "Jisajili",
         fullName: "Jina Kamili",
@@ -222,17 +198,11 @@
         signupSuccess: "Umejisajili kwa mafanikio!",
         loginSuccess: "Umeingia kwa mafanikio!",
         loginFail: "Namba au nenosiri si sahihi!",
-        phoneExists: "Namba hii ya simu tayari imetumika.",
-        enterName: "Tafadhali jaza jina lako kamili.",
-        forgotPasswordTitle: "Umesahau Nenosiri?",
-        forgotPasswordPlaceholder: "Ingiza namba ya simu",
-        forgotPasswordButton: "Pata Nenosiri",
-        forgotPasswordSuccess: "Asante kwa kuwekeza nasi! Nenosiri litatumwa kwenye barua pepe uliyojisajili nayo ndani ya saa 24 kwa usalama.",
-        forgotPasswordNotFound: "Samahani, hatujapata namba ya simu uliyoiingiza."
+        phoneExists: "Namba hii tayari imesajiliwa.",
+        enterName: "Tafadhali jaza jina kamili."
       },
       en: {
-        pitch: "Welcome to Real Investment! Join the real platform where every deposit brings new opportunities.",
-        promoSubtitle: "Earn while you sleep. Register now and start your journey to success!",
+        promoSubtitle: "Earn while you sleep. Register now!",
         login: "Login",
         signup: "Sign Up",
         fullName: "Full Name",
@@ -246,12 +216,7 @@
         loginSuccess: "Logged in successfully!",
         loginFail: "Invalid phone or password!",
         phoneExists: "This phone number is already registered.",
-        enterName: "Please enter your full name.",
-        forgotPasswordTitle: "Forgot Password?",
-        forgotPasswordPlaceholder: "Enter your phone number",
-        forgotPasswordButton: "Recover Password",
-        forgotPasswordSuccess: "Thank you for investing with us! Your password will be sent to your registered email within 24 hours.",
-        forgotPasswordNotFound: "Sorry, we couldn't find the phone number you entered."
+        enterName: "Please enter your full name."
       }
     };
 
@@ -264,12 +229,8 @@
       document.getElementById("phone").placeholder = lang.phone;
       document.getElementById("password").placeholder = lang.password;
       document.getElementById("email").placeholder = lang.email;
-      document.querySelector(".toggle").innerText = isSignUp ? lang.toggleToLogin : lang.toggleToSignup;
+      document.getElementById("toggleLink").innerText = isSignUp ? lang.toggleToLogin : lang.toggleToSignup;
       document.getElementById("promoSubtitle").innerText = lang.promoSubtitle;
-
-      document.getElementById("forgotPasswordTitle").innerText = lang.forgotPasswordTitle;
-      document.getElementById("forgotPhone").placeholder = lang.forgotPasswordPlaceholder;
-      document.getElementById("forgotPasswordBtn").innerText = lang.forgotPasswordButton;
     }
 
     function setLanguage(lang) {
@@ -293,33 +254,20 @@
       const referralPhone = document.getElementById("referralPhone").value.trim();
       const email = document.getElementById("email").value.trim();
 
+      let users = JSON.parse(localStorage.getItem("users")) || [];
+
       if (isSignUp) {
         if (!name) return alert(strings[currentLang].enterName);
-        if (!email) return alert(currentLang === "sw" ? "Tafadhali jaza barua pepe." : "Please enter email.");
-
-        let users = JSON.parse(localStorage.getItem("users")) || [];
-        const exists = users.some(u => u.phone === phone);
-        if (exists) return alert(strings[currentLang].phoneExists);
-
-        const newUser = { name, phone, password, email, deposit: 0, referralCommission: 0, referrals: [], referredBy: referralPhone || null };
-        if (referralPhone) {
-          const referrer = users.find(u => u.phone === referralPhone);
-          if (referrer && !referrer.referrals.includes(phone)) {
-            referrer.referrals.push(phone);
-          }
-        }
-
-        users.push(newUser);
+        if (users.some(u => u.phone === phone)) return alert(strings[currentLang].phoneExists);
+        users.push({ name, phone, password, email, referrals: [], referredBy: referralPhone || null });
         localStorage.setItem("users", JSON.stringify(users));
         alert(strings[currentLang].signupSuccess);
         toggleForm();
-
       } else {
-        let users = JSON.parse(localStorage.getItem("users")) || [];
-        const foundUser = users.find(u => u.phone === phone && u.password === password);
-        if (foundUser) {
+        const user = users.find(u => u.phone === phone && u.password === password);
+        if (user) {
+          localStorage.setItem("currentUser", JSON.stringify(user));
           alert(strings[currentLang].loginSuccess);
-          localStorage.setItem("currentUser", JSON.stringify(foundUser));
           window.location.href = "home.html";
         } else {
           alert(strings[currentLang].loginFail);
@@ -327,28 +275,8 @@
       }
     });
 
-    function showForgotPassword() {
-      document.getElementById("forgotPasswordModal").classList.toggle("hidden");
-    }
-
-    function recoverPassword() {
-      const phone = document.getElementById("forgotPhone").value.trim();
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const found = users.find(u => u.phone === phone);
-
-      if (found) {
-        const requests = JSON.parse(localStorage.getItem("passwordRequests")) || [];
-        requests.push({ name: found.name, phone: found.phone, email: found.email, password: found.password, requestedAt: Date.now() });
-        localStorage.setItem("passwordRequests", JSON.stringify(requests));
-        alert(strings[currentLang].forgotPasswordSuccess);
-      } else {
-        alert(strings[currentLang].forgotPasswordNotFound);
-      }
-    }
-
     window.onload = () => {
       updateTexts();
-      document.getElementById("language").value = currentLang;
     };
   </script>
 </body>
