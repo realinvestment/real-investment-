@@ -1,184 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Invest with Confidence – Real Investment</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Real Investment - Login / Sign Up</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #020024, #090979, #00d4ff);
-      color: #fff;
-      text-align: center;
-      padding: 40px 20px;
-      position: relative;
-    }
-
-    .top-right-signup {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 10;
-    }
-
-    .top-right-signup button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      background: gold;
-      color: #000;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
-      transition: 0.3s;
-    }
-
-    .top-right-signup button:hover {
-      background: #e6c200;
-    }
-
-    h1 {
-      font-size: 2.8rem;
-      margin-bottom: 10px;
-      animation: fadeIn 2s ease;
-    }
-
-    .sub-heading {
-      font-size: 1.3rem;
-      color: #eee;
-      margin-bottom: 40px;
-      line-height: 1.6;
-    }
-
-    .highlight {
-      color: #00ffcc;
-      font-weight: bold;
-    }
-
-    .benefits {
-      display: grid;
-      gap: 20px;
-      max-width: 800px;
-      margin: 0 auto 40px;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-
-    .benefit {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    }
-
-    .benefit h3 {
-      color: gold;
-      margin-bottom: 10px;
-    }
-
-    .counters {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #43cea2, #185a9d);
       display: flex;
       justify-content: center;
-      gap: 30px;
-      margin: 40px 0;
-      flex-wrap: wrap;
+      align-items: center;
+      min-height: 100vh;
     }
-
-    .counter-box {
-      font-size: 1.8rem;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 20px 30px;
-      border-radius: 10px;
-      border: 2px solid #00ffcc;
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-
+    h2 {
+      text-align: center;
+      color: #185a9d;
+    }
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #43cea2;
+      font-size: 14px;
+    }
     button {
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      background: gold;
-      color: #000;
+      width: 100%;
+      padding: 12px;
       border: none;
-      border-radius: 30px;
+      border-radius: 8px;
+      background: #185a9d;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-      transition: 0.3s;
+      font-size: 15px;
     }
-
     button:hover {
-      background: #e6c200;
+      background: #43cea2;
+      color: #185a9d;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      color: #185a9d;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-
-  <!-- Top Right Sign Up Button -->
-  <div class="top-right-signup">
-    <button onclick="window.location.href='signup.html'">Sign Up</button>
-  </div>
-
-  <!-- Main Headline -->
-  <h1>🚀 Start Growing Your Wealth Today with <span class="highlight">Real Investment</span></h1>
-
-  <!-- Tagline / Sub-Heading -->
-  <div class="sub-heading">
-    Unlock your financial freedom with <span class="highlight">daily earnings, secure investments</span>, and life-changing opportunities.<br>
-    Join <span class="highlight">1,000,000+</span> investors who trust Real Investment.
-  </div>
-
-  <div class="benefits">
-    <div class="benefit">
-      <h3>💸 Daily ROI</h3>
-      <p>Earn stable daily returns from your investment. 100% passive income.</p>
-    </div>
-    <div class="benefit">
-      <h3>🔐 Secure & Transparent</h3>
-      <p>Your funds are protected using blockchain-powered smart tracking.</p>
-    </div>
-    <div class="benefit">
-      <h3>🌍 Global Network</h3>
-      <p>Invest with a trusted platform used by investors in 100+ countries.</p>
-    </div>
-    <div class="benefit">
-      <h3>🎁 Referral Bonuses</h3>
-      <p>Get up to 10% bonus when you invite friends and they invest.</p>
-    </div>
-    <div class="benefit">
-      <h3>🧬 Binary Bonus</h3>
-      <p>Earn extra bonuses based on your team structure and performance. Maximize your profits with binary matching.</p>
-    </div>
-    <div class="benefit">
-      <h3>📈 Capping Limit</h3>
-      <p>Withdraw up to $5000+ daily depending on your rank level.</p>
+  <div class="container">
+    <h2 id="form-title">Login</h2>
+    <form id="loginForm">
+      <div id="nameField" class="hidden">
+        <input type="text" id="fullname" placeholder="Full Name" />
+      </div>
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+    <div class="toggle" onclick="toggleForm()" id="toggleLink">
+      Don't have an account? Sign up here
     </div>
   </div>
 
-  <div class="counters">
-    <div class="counter-box" id="investors">👥 Investors: 1,000,000+</div>
-    <div class="counter-box" id="invested">💰 Invested: $0</div>
-    <div class="counter-box">⏳ Since: 2020</div>
-  </div>
+<script>
+  // 🔹 Weka Firebase config yako hapa (ipatikane kwenye Firebase Console → Project settings → SDK setup)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "real-investment-37ccc.firebaseapp.com",
+    projectId: "real-investment-37ccc",
+    storageBucket: "real-investment-37ccc.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-  <button onclick="window.location.href='signup.html'">🚀 Get Started Now</button>
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  <script>
-    let invested = 497000000;
-    const investedDisplay = document.getElementById("invested");
+  let isSignUp = false;
 
-    function animateInvestment() {
-      if (invested < 505000000) {
-        invested += Math.floor(Math.random() * 1500 + 2500);
-        investedDisplay.textContent = "💰 Invested: $" + invested.toLocaleString();
-        requestAnimationFrame(animateInvestment);
+  // Toggle Login <-> Signup
+  function toggleForm(){
+    isSignUp = !isSignUp;
+    document.getElementById("form-title").innerText = isSignUp ? "Sign Up" : "Login";
+    document.getElementById("submitBtn").innerText = isSignUp ? "Sign Up" : "Login";
+    document.getElementById("nameField").classList.toggle("hidden");
+    document.getElementById("toggleLink").innerText = isSignUp
+      ? "Already have an account? Login here"
+      : "Don't have an account? Sign up here";
+  }
+
+  // Handle Login/Signup
+  document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const name = document.getElementById("fullname").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    try {
+      if(isSignUp){
+        // Signup new user
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection("users").doc(userCred.user.uid).set({
+          name,
+          email,
+          createdAt: new Date()
+        });
+        alert("Signup successful!");
+        window.location.href = "home.html";
+      } else {
+        // Login existing user
+        await auth.signInWithEmailAndPassword(email, password);
+        alert("Login successful!");
+        window.location.href = "home.html";
       }
+    } catch(err){
+      alert("Error: " + err.message);
     }
-
-    animateInvestment();
-  </script>
-
+  });
+</script>
 </body>
 </html>
