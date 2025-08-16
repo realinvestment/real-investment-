@@ -3,79 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Real Investment - Home</title>
+  <title>Real Investment - Dashboard</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #43cea2, #185a9d);
       min-height: 100vh;
-      margin: 0;
-      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
+      color: white;
     }
     .dashboard {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 400px;
+      background: rgba(255,255,255,0.15);
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 450px;
       width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    p {
+      margin: 8px 0;
     }
     button {
-      padding: 10px;
+      margin-top: 20px;
+      padding: 12px;
+      width: 100%;
       border: none;
+      border-radius: 8px;
       background: #ff4444;
       color: white;
-      border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
-      margin-top: 15px;
     }
     button:hover {
       background: #cc0000;
     }
-    .login-btn {
-      background: #2196F3;
-    }
-    .login-btn:hover {
-      background: #0b7dda;
-    }
   </style>
 </head>
 <body>
-
-<div class="dashboard" id="contentBox">
-  <!-- Content will be injected here -->
-</div>
+  <div class="dashboard">
+    <h1>Welcome to Real Investment</h1>
+    <p id="userName">Loading...</p>
+    <p id="userEmail"></p>
+    <button onclick="logout()">Logout</button>
+  </div>
 
 <script>
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  const contentBox = document.getElementById("contentBox");
-
-  if(!currentUser){
-    contentBox.innerHTML = `
-      <h1>Please login first</h1>
-      <p>You must be logged in to view your dashboard.</p>
-      <button class="login-btn" onclick="window.location.href='login.html'">Go to Login</button>
-    `;
-  } else {
-    contentBox.innerHTML = `
-      <h1>Welcome, ${currentUser.name}</h1>
-      <p>Email: ${currentUser.email}</p>
-      <p>Deposit: $${currentUser.deposit || 0}</p>
-      <button onclick="logout()">Logout</button>
-    `;
-  }
-
-  function logout(){
-    localStorage.removeItem("currentUser");
-    window.location.href = "login.html";
-  }
-</script>
-
-</body>
-</html>
+  // 🔹 Firebase config yako (ile ile uliyoeka login.html)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "real-investment-37ccc.firebaseapp.com",
