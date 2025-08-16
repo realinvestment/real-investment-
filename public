@@ -1,0 +1,7 @@
+myproject/
+├── public/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── firebase.json
+└── .firebaserc
